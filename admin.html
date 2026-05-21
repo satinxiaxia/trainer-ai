@@ -168,7 +168,7 @@ async function loadData() {
   document.getElementById('lastUpdate').textContent = '加载中...';
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/tool_events?select=tool_name,module_id,created_at,user_agent&order=created_at.desc&limit=1000`,
+      `${SUPABASE_URL}/rest/v1/tool_events?select=tool_name,module_id,created_at,user_agent,user_id,user_email,user_name&order=created_at.desc&limit=1000`,
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
     );
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -202,101 +202,61 @@ function render(data) {
   data.forEach(x => { toolCounts[x.tool_name] = (toolCounts[x.tool_name]||0)+1; });
   const sortedTools = Object.entries(toolCounts).sort((a,b)=>b[1]-a[1]);
   const hotEl = document.getElementById('hotList');
-  if (sortedTools.length === 0) {
-    hotEl.innerHTML = '<div class="empty">暂无数据</div>';
-  } else {
-    hotEl.innerHTML = sortedTools.slice(0,8).map(([name,cnt],i) =>
-      `<div class="hot-item">
-        <span class="hot-rank">${i+1}</span>
-        <span class="hot-name">${name}</span>
-        <span class="hot-count">${cnt}次</span>
-      </div>`
-    ).join('');
-  }
+  if (hotEl) hotEl.innerHTML = sortedTools.length === 0
+    ? '<div class="empty">暂无数据</div>'
+    : sortedTools.slice(0,8).map(([name,cnt],i) =>
+        `<div class="hot-item"><span class="hot-rank">${i+1}</span><span class="hot-name">${name}</span><span class="hot-count">${cnt}次</span></div>`
+      ).join('');
 
   // 最新记录
   const recentEl = document.getElementById('recentList');
-  if (data.length === 0) {
-    recentEl.innerHTML = '<div class="empty">暂无记录</div>';
-  } else {
-    recentEl.innerHTML = data.slice(0,8).map(x =>
-      `<div class="recent-item">
-        <div>
-          <div class="recent-tool">${x.tool_name}</div>
-          <div class="recent-module">${MODULE_NAME[x.module_id]||x.module_id||'未知'}</div>
-        </div>
-        <div class="recent-time">${timeAgo(x.created_at)}</div>
-      </div>`
-    ).join('');
-  }
+  if (recentEl) recentEl.innerHTML = data.length === 0
+    ? '<div class="empty">暂无记录</div>'
+    : data.slice(0,8).map(x =>
+        `<div class="recent-item"><div><div class="recent-tool">${x.tool_name}</div><div class="recent-module">${MODULE_NAME[x.module_id]||x.module_id||'未知'}</div></div><div class="recent-time">${timeAgo(x.created_at)}</div></div>`
+      ).join('');
 
   // 工具统计表格
   const tbody = document.getElementById('toolsTable');
-  if (sortedTools.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty">暂无数据</td></tr>';
-  } else {
+  if (tbody) {
     const toolMeta = {};
-    data.forEach(x => {
-      if (!toolMeta[x.tool_name]) toolMeta[x.tool_name] = { module: x.module_id, last: x.created_at };
-    });
-    tbody.innerHTML = sortedTools.map(([name,cnt],i) => {
-      const meta = toolMeta[name]||{};
-      const mod = MODULE_NAME[meta.module]||meta.module||'-';
-      return `<tr>
-        <td style="color:#64748b">${i+1}</td>
-        <td><strong>${name}</strong></td>
-        <td><span class="badge badge-purple">${mod}</span></td>
-        <td><strong style="color:#6366f1">${cnt}</strong></td>
-        <td style="color:#94a3b8;font-size:.78rem">${meta.last?fmtTime(meta.last):'-'}</td>
-      </tr>`;
-    }).join('');
+    data.forEach(x => { if (!toolMeta[x.tool_name]) toolMeta[x.tool_name] = { module: x.module_id, last: x.created_at }; });
+    tbody.innerHTML = sortedTools.length === 0
+      ? '<tr><td colspan="5" class="empty">暂无数据</td></tr>'
+      : sortedTools.map(([name,cnt],i) => {
+          const meta = toolMeta[name]||{};
+          return `<tr><td style="color:#64748b">${i+1}</td><td><strong>${name}</strong></td><td><span class="badge badge-purple">${MODULE_NAME[meta.module]||meta.module||'-'}</span></td><td><strong style="color:#6366f1">${cnt}</strong></td><td style="color:#94a3b8;font-size:.78rem">${meta.last?fmtTime(meta.last):'-'}</td></tr>`;
+        }).join('');
   }
 
   // 使用记录表格（含用户账号）
   const rtbody = document.getElementById('recordsTable');
-  if (data.length === 0) {
-    rtbody.innerHTML = '<tr><td colspan="5" class="empty">暂无记录</td></tr>';
-  } else {
-    rtbody.innerHTML = data.slice(0,100).map(x => {
-      const userShow = x.user_email
-        ? `<div style="font-size:.82rem;font-weight:600">${x.user_name||x.user_email}</div><div style="font-size:.7rem;color:#64748b">${x.user_email}</div>`
-        : `<span style="color:#64748b;font-size:.78rem">未登录访客</span>`;
-      return `<tr>
-        <td style="white-space:nowrap;color:#94a3b8;font-size:.78rem">${fmtTime(x.created_at)}</td>
-        <td>${userShow}</td>
-        <td><strong>${x.tool_name}</strong></td>
-        <td><span class="badge badge-blue">${MODULE_NAME[x.module_id]||x.module_id||'-'}</span></td>
-        <td style="font-size:.8rem">${devIcon(x.user_agent)}</td>
-      </tr>`;
-    }).join('');
+  if (rtbody) {
+    rtbody.innerHTML = data.length === 0
+      ? '<tr><td colspan="5" class="empty">暂无记录</td></tr>'
+      : data.slice(0,100).map(x => {
+          const userShow = x.user_email
+            ? `<div style="font-size:.82rem;font-weight:600">${x.user_name||x.user_email}</div><div style="font-size:.7rem;color:#64748b">${x.user_email}</div>`
+            : `<span style="color:#64748b;font-size:.78rem">未登录访客</span>`;
+          return `<tr><td style="white-space:nowrap;color:#94a3b8;font-size:.78rem">${fmtTime(x.created_at)}</td><td>${userShow}</td><td><strong>${x.tool_name}</strong></td><td><span class="badge badge-blue">${MODULE_NAME[x.module_id]||x.module_id||'-'}</span></td><td style="font-size:.8rem">${devIcon(x.user_agent)}</td></tr>`;
+        }).join('');
   }
 
-  // 注册用户KPI（统计唯一邮箱数）
-  const uniqueUsers = new Set(data.filter(x=>x.user_email).map(x=>x.user_email)).size;
-  const kpiUsersEl = document.getElementById('k-users');
-  if (kpiUsersEl) kpiUsersEl.textContent = uniqueUsers;
-  // 已使用工具数
-  const kpiToolsEl = document.getElementById('k-tools');
-  if (kpiToolsEl) kpiToolsEl.textContent = toolSet.size;
+  // 注册用户KPI & 工具数
+  safeSet('k-users', new Set(data.filter(x=>x.user_email).map(x=>x.user_email)).size);
+  safeSet('k-tools', toolSet.size);
 
   // 模块柱状图
   const maxVal = Math.max(...Object.values(moduleCounts), 1);
   const moduleEl = document.getElementById('moduleChart');
   const moduleOrder = ['analysis','design','development','implementation','evaluation','promotion','innovation'];
-  if (Object.keys(moduleCounts).length === 0) {
-    moduleEl.innerHTML = '<div class="empty">暂无数据</div>';
-  } else {
-    moduleEl.innerHTML = moduleOrder.map(key => {
-      const cnt = moduleCounts[key]||0;
-      const pct = Math.round(cnt/maxVal*100);
-      return `<div class="module-bar-row">
-        <div class="module-bar-label" title="${MODULE_NAME[key]||key}">${MODULE_NAME[key]||key}</div>
-        <div class="module-bar-track">
-          <div class="module-bar-fill" style="width:${pct}%">${cnt>0?cnt:''}</div>
-        </div>
-        <div class="module-bar-count">${cnt}</div>
-      </div>`;
-    }).join('');
+  if (moduleEl) moduleEl.innerHTML = Object.keys(moduleCounts).length === 0
+    ? '<div class="empty">暂无数据</div>'
+    : moduleOrder.map(key => {
+        const cnt = moduleCounts[key]||0;
+        const pct = Math.round(cnt/maxVal*100);
+        return `<div class="module-bar-row"><div class="module-bar-label" title="${MODULE_NAME[key]||key}">${MODULE_NAME[key]||key}</div><div class="module-bar-track"><div class="module-bar-fill" style="width:${pct}%">${cnt>0?cnt:''}</div></div><div class="module-bar-count">${cnt}</div></div>`;
+      }).join('');
   }
 }
 
