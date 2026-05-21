@@ -712,14 +712,27 @@ async function trackEvent(table, data) {
   } catch(e) { /* 静默失败，不影响用户体验 */ }
 }
 
-// 页面访问记录
+// 获取当前登录用户信息
+function getCurrentUser() {
+  try {
+    const u = JSON.parse(localStorage.getItem('sb_user') || '{}');
+    return {
+      user_id: u.id || null,
+      user_email: u.email || null,
+      user_name: (u.user_metadata && u.user_metadata.full_name) || u.email || null
+    };
+  } catch(e) { return { user_id: null, user_email: null, user_name: null }; }
+}
+
+// 页面访问记录（含用户信息）
 trackEvent('page_views', {
   page: 'index',
   user_agent: navigator.userAgent,
-  referrer: document.referrer || 'direct'
+  referrer: document.referrer || 'direct',
+  ...getCurrentUser()
 });
 
-// 劫持 openModal，记录工具点击
+// 劫持 openModal，记录工具点击（含用户信息）
 const _origOpenModal = openModal;
 window.openModal = function(tool) {
   if (tool && tool.name) {
@@ -729,7 +742,8 @@ window.openModal = function(tool) {
       module_id: tool.module || 'unknown',
       action: 'open',
       user_agent: navigator.userAgent,
-      referrer: document.referrer || 'direct'
+      referrer: document.referrer || 'direct',
+      ...getCurrentUser()
     });
   }
   _origOpenModal(tool);
