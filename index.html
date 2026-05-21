@@ -29,9 +29,11 @@ button{cursor:pointer;border:none;font-family:inherit}
 .sidenav-toggle{position:fixed;left:0;top:50%;transform:translateY(-50%);width:32px;height:80px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:0 12px 12px 0;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:901;transition:left .3s;font-size:.75rem;color:#fff;writing-mode:vertical-lr;letter-spacing:.12em;font-weight:700;box-shadow:2px 0 16px rgba(99,102,241,0.5)}
 .sidenav-toggle:hover{width:38px;box-shadow:2px 0 24px rgba(99,102,241,0.7)}
 .sidenav-toggle.open{left:220px}
-.page-wrapper{transition:padding-left .3s}
-.page-wrapper.nav-open{padding-left:220px}
-@media(max-width:768px){.page-wrapper.nav-open{padding-left:0}.sidenav-toggle.open{left:220px}}
+.page-wrapper{transition:none}
+.page-wrapper.nav-open{padding-left:0}
+@media(max-width:768px){.sidenav-toggle.open{left:220px}}
+.sidenav-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:899}
+.sidenav-overlay.show{display:block}
 
 /* NAV */
 .navbar{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(15,23,42,0.92);
@@ -238,6 +240,7 @@ padding:6px 16px;border-radius:20px;font-size:.8rem;transition:all .2s}
   <div class="sidenav-inner" id="sidenavInner"></div>
 </div>
 <div class="sidenav-toggle" id="sidenavToggle" onclick="toggleSidenav()" title="快捷导航">☰<br>工具</div>
+<div class="sidenav-overlay" id="sidenavOverlay" onclick="toggleSidenav()"></div>
 
 <!-- MODULES CONTAINER -->
 <div class="page-wrapper" id="pageWrapper">
@@ -852,10 +855,10 @@ function toggleSidenav() {
   sidenavOpen = !sidenavOpen;
   const nav = document.getElementById('sidenav');
   const toggle = document.getElementById('sidenavToggle');
-  const wrapper = document.getElementById('pageWrapper');
-  if (nav) nav.classList.toggle('open', sidenavOpen);
-  if (toggle) toggle.classList.toggle('open', sidenavOpen);
-  if (wrapper && window.innerWidth > 768) wrapper.classList.toggle('nav-open', sidenavOpen);
+  const overlay = document.getElementById('sidenavOverlay');
+  if (nav) nav.style.transform = sidenavOpen ? 'translateX(0)' : 'translateX(-100%)';
+  if (toggle) { toggle.style.left = sidenavOpen ? '220px' : '0'; toggle.innerHTML = sidenavOpen ? '✕<br>关闭' : '☰<br>工具'; }
+  if (overlay) overlay.classList.toggle('show', sidenavOpen);
 }
 
 // 页面渲染完成后构建侧边栏
