@@ -633,6 +633,34 @@ window.openModal = function(tool) {
   }
   _origOpenModal(tool);
 };
+
+// ========== 登录检查 ==========
+(function() {
+  const token = localStorage.getItem('sb_token');
+  if (!token) {
+    window.location.href = 'login.html';
+    return;
+  }
+  try {
+    const user = JSON.parse(localStorage.getItem('sb_user') || '{}');
+    const name = (user.user_metadata && user.user_metadata.full_name) || user.email || '用户';
+    window.addEventListener('DOMContentLoaded', function() {
+      const navActions = document.querySelector('.nav-actions');
+      if (navActions) {
+        const userDiv = document.createElement('div');
+        userDiv.style.cssText = 'display:flex;align-items:center;gap:8px;color:#e2e8f0;font-size:.9rem';
+        userDiv.innerHTML = '<span>\uD83D\uDC4B ' + name + '</span><button onclick="logout()" style="background:transparent;border:1px solid #334155;color:#94a3b8;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:.85rem">退出</button>';
+        navActions.prepend(userDiv);
+      }
+    });
+  } catch(e) {}
+})();
+
+function logout() {
+  localStorage.removeItem('sb_token');
+  localStorage.removeItem('sb_user');
+  window.location.href = 'login.html';
+}
 </script>
 </body>
 </html>
