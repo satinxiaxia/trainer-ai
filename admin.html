@@ -6,208 +6,481 @@
 <title>TrainerAI 管理后台</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
-.header{background:#1e293b;border-bottom:1px solid #334155;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.header-brand{font-size:1.1rem;font-weight:700;background:linear-gradient(135deg,#6366f1,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.header-status{font-size:.8rem;color:#94a3b8}
-.header-status span{color:#10b981;font-weight:600}
-.container{max-width:1100px;margin:0 auto;padding:24px 16px}
-.section-title{font-size:1rem;font-weight:700;color:#e2e8f0;margin:28px 0 14px;display:flex;align-items:center;gap:8px}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:8px}
-.kpi-card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;text-align:center}
-.kpi-label{font-size:.78rem;color:#94a3b8;margin-bottom:8px}
-.kpi-value{font-size:2rem;font-weight:800;background:linear-gradient(135deg,#6366f1,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.kpi-sub{font-size:.72rem;color:#64748b;margin-top:4px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media(max-width:680px){.grid2{grid-template-columns:1fr}}
-.card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px}
-.card-title{font-size:.9rem;font-weight:700;margin-bottom:14px;color:#cbd5e1}
-.hot-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1e293b}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;display:flex;flex-direction:column}
+/* 顶部导航 */
+.topbar{background:#1e293b;border-bottom:1px solid #334155;padding:0 20px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+.topbar-brand{font-size:1rem;font-weight:700;background:linear-gradient(135deg,#6366f1,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-status{font-size:.78rem;color:#64748b}
+.topbar-status span{color:#10b981}
+.btn{padding:7px 16px;border-radius:8px;border:none;cursor:pointer;font-size:.82rem;font-weight:600;transition:.2s}
+.btn-primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}
+.btn-outline{background:transparent;border:1px solid #334155;color:#94a3b8}
+.btn-outline:hover{border-color:#6366f1;color:#6366f1}
+.btn-sm{padding:5px 12px;font-size:.75rem}
+.btn-danger{background:#ef4444;color:#fff}
+/* 布局 */
+.layout{display:flex;flex:1;min-height:calc(100vh - 54px)}
+/* 左侧边栏 */
+.sidebar{width:200px;background:#1e293b;border-right:1px solid #334155;padding:16px 0;flex-shrink:0;position:sticky;top:54px;height:calc(100vh - 54px);overflow-y:auto}
+.nav-section{padding:8px 16px 4px;font-size:.68rem;color:#64748b;text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;transition:.15s;font-size:.875rem;color:#94a3b8;border-left:3px solid transparent}
+.nav-item:hover{background:#0f172a;color:#e2e8f0}
+.nav-item.active{background:#0f172a;color:#6366f1;border-left-color:#6366f1;font-weight:600}
+.nav-icon{font-size:1rem;width:20px;text-align:center}
+/* 主内容 */
+.main{flex:1;padding:24px;overflow-y:auto;max-width:100%}
+/* 面板 */
+.panel{display:none}
+.panel.active{display:block}
+.page-title{font-size:1.2rem;font-weight:700;color:#f1f5f9;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px}
+.kpi-card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;text-align:center;transition:.2s}
+.kpi-card:hover{border-color:#6366f1;transform:translateY(-2px)}
+.kpi-label{font-size:.75rem;color:#94a3b8;margin-bottom:8px}
+.kpi-value{font-size:2rem;font-weight:800;background:linear-gradient(135deg,#6366f1,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.2}
+.kpi-sub{font-size:.7rem;color:#64748b;margin-top:4px}
+/* 网格 */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px}
+@media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr}.sidebar{width:54px}.nav-item span{display:none}.nav-section{display:none}}
+/* 卡片 */
+.card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;margin-bottom:14px}
+.card-title{font-size:.9rem;font-weight:700;color:#cbd5e1;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.empty{text-align:center;color:#64748b;padding:24px;font-size:.85rem}
+/* 列表 */
+.hot-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #0f172a}
 .hot-item:last-child{border-bottom:none}
 .hot-rank{width:22px;height:22px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0}
-.hot-name{flex:1;font-size:.85rem}
-.hot-count{font-size:.78rem;color:#6366f1;font-weight:600;white-space:nowrap}
-.recent-item{padding:10px 0;border-bottom:1px solid #334155;display:flex;justify-content:space-between;align-items:flex-start}
+.hot-name{flex:1;font-size:.84rem}
+.hot-count{font-size:.78rem;color:#6366f1;font-weight:600}
+.recent-item{padding:10px 0;border-bottom:1px solid #334155;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .recent-item:last-child{border-bottom:none}
-.recent-tool{font-size:.85rem;font-weight:600}
-.recent-time{font-size:.75rem;color:#94a3b8;white-space:nowrap;margin-left:10px}
-.recent-module{font-size:.72rem;color:#6366f1;margin-top:2px}
-.table-wrap{overflow-x:auto;margin-top:8px}
-table{width:100%;border-collapse:collapse;font-size:.82rem}
-th{text-align:left;padding:10px 12px;color:#94a3b8;border-bottom:1px solid #334155;font-weight:600;white-space:nowrap}
+.recent-tool{font-size:.85rem;font-weight:600;color:#e2e8f0}
+.recent-module{font-size:.72rem;color:#64748b;margin-top:2px}
+.recent-time{font-size:.72rem;color:#64748b;white-space:nowrap}
+/* 模块柱状图 */
+.module-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.module-bar-label{width:80px;font-size:.75rem;color:#94a3b8;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.module-bar-track{flex:1;background:#334155;border-radius:4px;height:20px;overflow:hidden;position:relative}
+.module-bar-fill{height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-size:.7rem;color:#fff;font-weight:600;transition:width .6s ease;min-width:2px}
+.module-bar-count{width:28px;text-align:right;font-size:.78rem;color:#6366f1;font-weight:600;flex-shrink:0}
+/* 表格 */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.83rem}
+th{background:#0f172a;color:#64748b;padding:10px 12px;text-align:left;font-size:.75rem;font-weight:600;white-space:nowrap}
 td{padding:10px 12px;border-bottom:1px solid #1e293b;vertical-align:middle}
-tr:hover td{background:#253348}
-.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.72rem;font-weight:600}
-.badge-purple{background:#312e81;color:#a5b4fc}
-.badge-blue{background:#1e3a5f;color:#93c5fd}
-.loading{text-align:center;padding:40px;color:#64748b;font-size:.9rem}
-.empty{text-align:center;padding:30px;color:#64748b;font-size:.85rem}
-.refresh-btn{background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;padding:6px 16px;border-radius:8px;font-size:.82rem;cursor:pointer;font-weight:600}
-.refresh-btn:hover{opacity:.85}
-.back-btn{background:transparent;border:1px solid #334155;color:#94a3b8;padding:6px 14px;border-radius:6px;font-size:.82rem;cursor:pointer}
-.back-btn:hover{border-color:#6366f1;color:#e2e8f0}
-.tab-bar{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
-.tab{padding:8px 16px;border-radius:8px;border:1px solid #334155;background:transparent;color:#94a3b8;cursor:pointer;font-size:.85rem;transition:all .2s}
-.tab.active{background:linear-gradient(135deg,#6366f1,#8b5cf6);border-color:transparent;color:#fff;font-weight:600}
-.tab-panel{display:none}
-.tab-panel.active{display:block}
-.module-bar-wrap{margin-top:8px}
-.module-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:.82rem}
-.module-bar-label{width:100px;color:#94a3b8;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.module-bar-track{flex:1;background:#1e3a5f;border-radius:4px;height:18px;overflow:hidden}
-.module-bar-fill{height:100%;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:4px;transition:width .6s ease;display:flex;align-items:center;padding-left:6px;font-size:.7rem;font-weight:600;color:#fff;min-width:30px}
-.module-bar-count{width:36px;text-align:right;color:#94a3b8;flex-shrink:0}
-#lastUpdate{font-size:.72rem;color:#64748b}
+tr:hover td{background:#0f172a}
+/* 徽章 */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:600}
+.badge-blue{background:#1e3a5f;color:#60a5fa}
+.badge-purple{background:#2d1b69;color:#a78bfa}
+.badge-green{background:#14532d;color:#4ade80}
+.badge-red{background:#450a0a;color:#f87171}
+.badge-yellow{background:#422006;color:#fbbf24}
+/* 开关 */
+.toggle{position:relative;display:inline-block;width:36px;height:20px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#334155;transition:.3s;border-radius:20px}
+.toggle-slider:before{content:'';position:absolute;height:14px;width:14px;left:3px;bottom:3px;background:#94a3b8;transition:.3s;border-radius:50%}
+.toggle input:checked + .toggle-slider{background:#6366f1}
+.toggle input:checked + .toggle-slider:before{transform:translateX(16px);background:#fff}
+/* 搜索栏 */
+.search-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.search-input{flex:1;min-width:180px;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:8px 14px;color:#e2e8f0;font-size:.85rem;outline:none}
+.search-input:focus{border-color:#6366f1}
+.filter-select{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:8px 14px;color:#94a3b8;font-size:.83rem;outline:none}
+/* 内容编辑 */
+.editor-layout{display:grid;grid-template-columns:240px 1fr;gap:16px}
+@media(max-width:720px){.editor-layout{grid-template-columns:1fr}}
+.tool-picker{background:#0f172a;border:1px solid #334155;border-radius:10px;overflow:hidden;max-height:500px;overflow-y:auto}
+.tool-picker-item{padding:10px 14px;cursor:pointer;font-size:.83rem;border-bottom:1px solid #1e293b;transition:.15s}
+.tool-picker-item:hover{background:#1e293b;color:#6366f1}
+.tool-picker-item.active{background:#1e293b;color:#6366f1;border-left:3px solid #6366f1}
+.tool-picker-group{padding:6px 14px;font-size:.7rem;color:#64748b;background:#0a0f1a;text-transform:uppercase;letter-spacing:.06em}
+.prompt-editor{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:16px;min-height:400px;font-family:'Courier New',monospace;font-size:.82rem;color:#e2e8f0;line-height:1.7;outline:none;resize:vertical;width:100%}
+.prompt-editor:focus{border-color:#6366f1}
+/* 系统设置 */
+.setting-item{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid #334155}
+.setting-item:last-child{border-bottom:none}
+.setting-label{font-size:.88rem;color:#e2e8f0;font-weight:500}
+.setting-desc{font-size:.75rem;color:#64748b;margin-top:2px}
+.setting-input{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:7px 12px;color:#e2e8f0;font-size:.83rem;outline:none;width:220px}
+.setting-input:focus{border-color:#6366f1}
+/* 用户卡片 */
+.user-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #334155}
+.user-row:last-child{border-bottom:none}
+.user-avatar{width:36px;height:36px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.user-info{flex:1}
+.user-name{font-size:.85rem;font-weight:600;color:#e2e8f0}
+.user-email{font-size:.72rem;color:#64748b}
+.user-meta{font-size:.72rem;color:#94a3b8;text-align:right}
+/* 导出按钮 */
+.export-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#1e293b;border:1px solid #334155;border-radius:8px;color:#94a3b8;font-size:.82rem;cursor:pointer;transition:.2s}
+.export-btn:hover{border-color:#6366f1;color:#6366f1}
+/* toast */
+.toast{position:fixed;bottom:24px;right:24px;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px 20px;font-size:.85rem;color:#e2e8f0;z-index:9999;opacity:0;transform:translateY(10px);transition:.3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{border-color:#10b981;color:#4ade80}
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="header-brand">🤖 TrainerAI 管理后台</div>
-  <div style="display:flex;align-items:center;gap:12px">
-    <span id="lastUpdate" class="header-status">正在加载...</span>
-    <button class="refresh-btn" onclick="loadData()">🔄 刷新</button>
-    <button class="back-btn" onclick="window.open('index.html','_blank')">← 用户端</button>
+<!-- 顶部导航 -->
+<div class="topbar">
+  <div class="topbar-brand">🎯 TrainerAI 管理后台</div>
+  <div class="topbar-right">
+    <div class="topbar-status" id="lastUpdate">正在加载...</div>
+    <button class="btn btn-primary btn-sm" onclick="loadData()">↻ 刷新</button>
+    <a href="index.html" class="btn btn-outline btn-sm">← 用户端</a>
   </div>
 </div>
 
-<div class="container">
-
-  <!-- TAB 导航 -->
-  <div class="tab-bar">
-    <button class="tab active" onclick="switchTab('overview',this)">📊 数据概览</button>
-    <button class="tab" onclick="switchTab('tools',this)">🔧 工具统计</button>
-    <button class="tab" onclick="switchTab('records',this)">📋 使用记录</button>
-    <button class="tab" onclick="switchTab('modules',this)">📈 模块分析</button>
+<div class="layout">
+  <!-- 左侧边栏 -->
+  <div class="sidebar">
+    <div class="nav-section">主菜单</div>
+    <div class="nav-item active" onclick="showPanel('overview',this)">
+      <span class="nav-icon">📊</span><span>数据概览</span>
+    </div>
+    <div class="nav-item" onclick="showPanel('tools',this)">
+      <span class="nav-icon">🛠️</span><span>工具管理</span>
+    </div>
+    <div class="nav-item" onclick="showPanel('users',this)">
+      <span class="nav-icon">👥</span><span>用户管理</span>
+    </div>
+    <div class="nav-item" onclick="showPanel('records',this)">
+      <span class="nav-icon">📋</span><span>使用记录</span>
+    </div>
+    <div class="nav-item" onclick="showPanel('content',this)">
+      <span class="nav-icon">📝</span><span>内容编辑</span>
+    </div>
+    <div class="nav-item" onclick="showPanel('stats',this)">
+      <span class="nav-icon">📈</span><span>模块统计</span>
+    </div>
+    <div class="nav-section">系统</div>
+    <div class="nav-item" onclick="showPanel('settings',this)">
+      <span class="nav-icon">⚙️</span><span>系统设置</span>
+    </div>
   </div>
 
-  <!-- 数据概览 -->
-  <div class="tab-panel active" id="panel-overview">
-    <div class="kpi-grid" id="kpiGrid">
-      <div class="kpi-card"><div class="kpi-label">工具使用总次数</div><div class="kpi-value" id="k-total">-</div><div class="kpi-sub">累计</div></div>
-      <div class="kpi-card"><div class="kpi-label">今日使用次数</div><div class="kpi-value" id="k-today">-</div><div class="kpi-sub">今天</div></div>
-      <div class="kpi-card"><div class="kpi-label">注册用户数</div><div class="kpi-value" id="k-users">-</div><div class="kpi-sub">已登录使用的账号</div></div>
-      <div class="kpi-card"><div class="kpi-label">最活跃模块</div><div class="kpi-value" id="k-module" style="font-size:1.1rem;padding-top:6px">-</div><div class="kpi-sub">使用最多</div></div>
+  <!-- 主内容 -->
+  <div class="main">
+
+    <!-- 数据概览 -->
+    <div class="panel active" id="panel-overview">
+      <div class="page-title">📊 数据概览</div>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">工具使用总次数</div>
+          <div class="kpi-value" id="k-total">-</div>
+          <div class="kpi-sub">累计</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">今日使用次数</div>
+          <div class="kpi-value" id="k-today">-</div>
+          <div class="kpi-sub">今天</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">注册用户数</div>
+          <div class="kpi-value" id="k-users">-</div>
+          <div class="kpi-sub">已登录账号</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">最活跃工具</div>
+          <div class="kpi-value" style="font-size:1rem;padding-top:6px" id="k-module">-</div>
+          <div class="kpi-sub">使用最多</div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">🔥 热门工具 Top 8</div>
+          <div id="hotList"><div class="empty">加载中...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🕐 最新使用记录</div>
+          <div id="recentList"><div class="empty">加载中...</div></div>
+        </div>
+      </div>
     </div>
 
-    <div class="grid2" style="margin-top:14px">
-      <div class="card">
-        <div class="card-title">🔥 热门工具 Top 8</div>
-        <div id="hotList"><div class="loading">加载中...</div></div>
+    <!-- 工具管理 -->
+    <div class="panel" id="panel-tools">
+      <div class="page-title">🛠️ 工具管理</div>
+      <div class="search-bar">
+        <input class="search-input" id="toolSearch" placeholder="搜索工具名称..." oninput="filterToolTable()">
+        <select class="filter-select" id="toolModuleFilter" onchange="filterToolTable()">
+          <option value="">全部模块</option>
+          <option value="analysis">需求分析</option>
+          <option value="design">课程设计</option>
+          <option value="development">资料制作</option>
+          <option value="implementation">互动体验</option>
+          <option value="evaluation">培训评估</option>
+          <option value="promotion">课程宣发</option>
+          <option value="innovation">创新场景</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="showToast('功能开发中，请前往代码编辑工具添加新工具','info')">+ 新增工具</button>
       </div>
       <div class="card">
-        <div class="card-title">🕐 最新使用记录</div>
-        <div id="recentList"><div class="loading">加载中...</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>#</th><th>工具名称</th><th>所属模块</th><th>使用次数</th><th>状态</th><th>操作</th></tr>
+            </thead>
+            <tbody id="toolsTable"><tr><td colspan="6" class="empty">加载中...</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- 工具统计 -->
-  <div class="tab-panel" id="panel-tools">
-    <div class="card">
-      <div class="card-title">🛠️ 所有工具使用次数</div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>#</th><th>工具名称</th><th>所属模块</th><th>使用次数</th><th>最近使用</th></tr></thead>
-          <tbody id="toolsTable"><tr><td colspan="5" class="loading">加载中...</td></tr></tbody>
-        </table>
+    <!-- 用户管理 -->
+    <div class="panel" id="panel-users">
+      <div class="page-title">👥 用户管理</div>
+      <div class="search-bar">
+        <input class="search-input" placeholder="搜索用户邮箱或姓名..." oninput="filterUsers(this.value)">
+        <button class="export-btn" onclick="exportUsers()">⬇ 导出用户数据</button>
+      </div>
+      <div class="card">
+        <div class="card-title">
+          <span>注册用户列表</span>
+          <span class="badge badge-blue" id="userCount">统计中</span>
+        </div>
+        <div id="userList"><div class="empty">加载中...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">访客统计（未登录用户）</div>
+        <div class="kpi-grid" style="margin-bottom:0">
+          <div class="kpi-card">
+            <div class="kpi-label">未登录访客使用次数</div>
+            <div class="kpi-value" id="k-anon">-</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">已登录用户使用次数</div>
+            <div class="kpi-value" id="k-loggedin">-</div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- 使用记录 -->
-  <div class="tab-panel" id="panel-records">
-    <div class="card">
-      <div class="card-title">📋 全部使用记录（最新100条）</div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>时间</th><th>用户账号</th><th>工具名称</th><th>模块</th><th>设备</th></tr></thead>
-          <tbody id="recordsTable"><tr><td colspan="5" class="loading">加载中...</td></tr></tbody>
-        </table>
+    <!-- 使用记录 -->
+    <div class="panel" id="panel-records">
+      <div class="page-title">📋 使用记录</div>
+      <div class="search-bar">
+        <input class="search-input" placeholder="搜索工具名或用户..." id="recordSearch" oninput="filterRecords()">
+        <select class="filter-select" id="recordModuleFilter" onchange="filterRecords()">
+          <option value="">全部模块</option>
+          <option value="analysis">需求分析</option>
+          <option value="design">课程设计</option>
+          <option value="development">资料制作</option>
+          <option value="implementation">互动体验</option>
+          <option value="evaluation">培训评估</option>
+          <option value="promotion">课程宣发</option>
+          <option value="innovation">创新场景</option>
+        </select>
+        <button class="export-btn" onclick="exportRecords()">⬇ 导出记录</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>时间</th><th>用户</th><th>工具名称</th><th>所属模块</th><th>设备</th></tr>
+            </thead>
+            <tbody id="recordsTable"><tr><td colspan="5" class="empty">加载中...</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- 模块分析 -->
-  <div class="tab-panel" id="panel-modules">
-    <div class="card">
-      <div class="card-title">📈 各模块使用分布</div>
-      <div class="module-bar-wrap" id="moduleChart"><div class="loading">加载中...</div></div>
+    <!-- 内容编辑 -->
+    <div class="panel" id="panel-content">
+      <div class="page-title">📝 内容编辑</div>
+      <p style="color:#64748b;font-size:.85rem;margin-bottom:16px">选择工具后可查看和编辑其 Prompt 模板内容（本地预览，需要开发者提交代码才能生效）</p>
+      <div class="editor-layout">
+        <div>
+          <div style="font-size:.8rem;color:#94a3b8;margin-bottom:8px;font-weight:600">选择工具</div>
+          <div class="tool-picker" id="toolPicker">
+            <div class="empty">加载中...</div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-size:.85rem;font-weight:600;color:#e2e8f0" id="editorToolName">请选择工具</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-outline btn-sm" onclick="copyPrompt()">复制</button>
+              <button class="btn btn-primary btn-sm" onclick="showToast('Prompt 已保存到本地（需提交代码生效）','success')">保存</button>
+            </div>
+          </div>
+          <textarea class="prompt-editor" id="promptEditor" placeholder="选择左侧工具后，此处显示 Prompt 模板内容..."></textarea>
+          <div style="margin-top:10px;font-size:.75rem;color:#64748b">💡 修改后点「保存」可本地预览效果。如需正式更新，请联系开发者提交代码。</div>
+        </div>
+      </div>
     </div>
-  </div>
 
+    <!-- 模块统计 -->
+    <div class="panel" id="panel-stats">
+      <div class="page-title">📈 模块统计</div>
+      <div class="card">
+        <div class="card-title">各模块使用分布</div>
+        <div id="moduleChart"><div class="empty">加载中...</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">工具使用排行（Top 10）</div>
+          <div id="toolRankList"><div class="empty">加载中...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">今日活跃情况</div>
+          <div id="todayStats"><div class="empty">加载中...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 系统设置 -->
+    <div class="panel" id="panel-settings">
+      <div class="page-title">⚙️ 系统设置</div>
+      <div class="card">
+        <div class="card-title">基本信息</div>
+        <div class="setting-item">
+          <div><div class="setting-label">产品名称</div><div class="setting-desc">显示在用户端顶部导航</div></div>
+          <input class="setting-input" value="TrainerAI 培训师AI工具仓">
+        </div>
+        <div class="setting-item">
+          <div><div class="setting-label">版权信息</div><div class="setting-desc">显示在页脚</div></div>
+          <input class="setting-input" value="© 2026 TrainerAI 培训师AI工具仓">
+        </div>
+        <div class="setting-item">
+          <div><div class="setting-label">Supabase 项目 URL</div><div class="setting-desc">数据库连接地址</div></div>
+          <input class="setting-input" value="https://omcxlxcamweynlgfvcqy.supabase.co" readonly style="color:#64748b">
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">功能开关</div>
+        <div class="setting-item">
+          <div><div class="setting-label">登录注册</div><div class="setting-desc">开启后用户需登录才能使用工具</div></div>
+          <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="setting-item">
+          <div><div class="setting-label">使用行为追踪</div><div class="setting-desc">记录用户工具使用数据</div></div>
+          <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="setting-item">
+          <div><div class="setting-label">工具搜索功能</div><div class="setting-desc">用户端顶部搜索框</div></div>
+          <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="setting-item">
+          <div><div class="setting-label">AI工具推荐跳转</div><div class="setting-desc">工具弹窗底部的推荐按钮</div></div>
+          <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">数据管理</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <button class="export-btn" onclick="exportRecords()">⬇ 导出使用记录 CSV</button>
+          <button class="export-btn" onclick="exportUsers()">⬇ 导出用户数据 CSV</button>
+          <button class="btn btn-outline btn-sm" onclick="loadData()">↻ 手动刷新数据</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script>
 const SUPABASE_URL = 'https://omcxlxcamweynlgfvcqy.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_XYLqYjkf-c3baMDdZ3yCgQ_37OCkSed';
 
 const MODULE_NAME = {
-  analysis:'🔍 需求分析', design:'📐 课程设计', development:'🛠️ 资料制作',
-  implementation:'🎮 互动体验', evaluation:'📊 培训评估', promotion:'📢 课程宣发', innovation:'✨ 创新场景'
+  analysis:'需求分析',design:'课程设计',development:'资料制作',
+  implementation:'互动体验',evaluation:'培训评估',promotion:'课程宣发',innovation:'创新场景'
 };
 
-function timeAgo(iso) {
-  const d = Math.floor((Date.now() - new Date(iso)) / 1000);
-  if (d < 60) return '刚刚';
-  if (d < 3600) return Math.floor(d/60) + '分钟前';
-  if (d < 86400) return Math.floor(d/3600) + '小时前';
-  return Math.floor(d/86400) + '天前';
-}
-function fmtTime(iso) {
-  const t = new Date(iso);
-  return `${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
-}
-function devIcon(ua='') {
-  if (/iPhone|Android/.test(ua)) return '📱 手机';
-  if (/iPad/.test(ua)) return '📱 平板';
-  return '💻 电脑';
+let allData = [];
+let allTools = [];
+
+// 侧边栏切换
+function showPanel(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  if (id === 'content' && allTools.length === 0) buildToolPicker();
+  if (id === 'tools') renderToolsPanel();
+  if (id === 'users') renderUsersPanel();
+  if (id === 'records') renderRecordsPanel();
+  if (id === 'stats') renderStatsPanel();
 }
 
+// 时间格式
+function fmtTime(t) {
+  if (!t) return '-';
+  const d = new Date(t);
+  return d.toLocaleDateString('zh-CN') + ' ' + d.toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'});
+}
+function timeAgo(t) {
+  const diff = Math.floor((Date.now() - new Date(t)) / 1000);
+  if (diff < 60) return diff + '秒前';
+  if (diff < 3600) return Math.floor(diff/60) + '分钟前';
+  if (diff < 86400) return Math.floor(diff/3600) + '小时前';
+  return Math.floor(diff/86400) + '天前';
+}
+function devIcon(ua) {
+  if (!ua) return '❓';
+  if (/mobile|android|iphone|ipad/i.test(ua)) return '📱 手机';
+  return '💻 电脑';
+}
+function safeSet(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+// 主数据加载
 async function loadData() {
   const lastEl = document.getElementById('lastUpdate');
-  if (lastEl) lastEl.textContent = '加载中...';
+  if (lastEl) lastEl.textContent = '正在加载...';
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/tool_events?select=tool_name,module_id,created_at,user_agent,user_id,user_email,user_name&order=created_at.desc&limit=1000`,
+      `${SUPABASE_URL}/rest/v1/tool_events?select=tool_name,module_id,created_at,user_agent,user_id,user_email,user_name&order=created_at.desc&limit=2000`,
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
     );
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    if (!Array.isArray(data)) throw new Error('返回数据格式错误');
-    render(data);
-    if (lastEl) lastEl.innerHTML = `上次更新 <span>${new Date().toLocaleTimeString('zh-CN')}</span>`;
+    if (!Array.isArray(data)) throw new Error('数据格式错误');
+    allData = data;
+    renderOverview(data);
+    if (lastEl) lastEl.innerHTML = `上次更新 <span style="color:#10b981">${new Date().toLocaleTimeString('zh-CN')}</span>`;
   } catch(e) {
     if (lastEl) lastEl.textContent = '加载失败: ' + e.message;
-    // 显示错误状态
     ['hotList','recentList'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = `<div class="empty">加载失败，请点刷新重试</div>`;
     });
-    console.error('loadData error:', e);
   }
 }
 
-function render(data) {
+// 数据概览渲染
+function renderOverview(data) {
   const today = new Date(); today.setHours(0,0,0,0);
   const todayData = data.filter(x => new Date(x.created_at) >= today);
-
-  // KPI
-  const toolSet = new Set(data.map(x=>x.tool_name));
+  const toolSet = new Set(data.map(x => x.tool_name));
   const moduleCounts = {};
   data.forEach(x => { moduleCounts[x.module_id] = (moduleCounts[x.module_id]||0)+1; });
-  const topModule = Object.entries(moduleCounts).sort((a,b)=>b[1]-a[1])[0];
+  const topEntry = Object.entries(moduleCounts).sort((a,b)=>b[1]-a[1])[0];
+  const uniqueUsers = new Set(data.filter(x=>x.user_email).map(x=>x.user_email));
 
-  const safeSet = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
   safeSet('k-total', data.length);
   safeSet('k-today', todayData.length);
-  safeSet('k-tools', toolSet.size);
-  safeSet('k-module', topModule ? (MODULE_NAME[topModule[0]]||topModule[0]) : '-');
+  safeSet('k-users', uniqueUsers.size);
+  safeSet('k-module', topEntry ? (MODULE_NAME[topEntry[0]]||topEntry[0]) : '-');
 
   // 热门工具
   const toolCounts = {};
   data.forEach(x => { toolCounts[x.tool_name] = (toolCounts[x.tool_name]||0)+1; });
   const sortedTools = Object.entries(toolCounts).sort((a,b)=>b[1]-a[1]);
+  allTools = sortedTools;
+
   const hotEl = document.getElementById('hotList');
   if (hotEl) hotEl.innerHTML = sortedTools.length === 0
     ? '<div class="empty">暂无数据</div>'
@@ -222,64 +495,271 @@ function render(data) {
     : data.slice(0,8).map(x =>
         `<div class="recent-item"><div><div class="recent-tool">${x.tool_name}</div><div class="recent-module">${MODULE_NAME[x.module_id]||x.module_id||'未知'}</div></div><div class="recent-time">${timeAgo(x.created_at)}</div></div>`
       ).join('');
+}
 
-  // 工具统计表格
+// 工具管理面板
+function renderToolsPanel() {
+  if (allData.length === 0) return;
+  const toolCounts = {};
+  const toolModule = {};
+  allData.forEach(x => {
+    toolCounts[x.tool_name] = (toolCounts[x.tool_name]||0)+1;
+    toolModule[x.tool_name] = x.module_id;
+  });
+  const sorted = Object.entries(toolCounts).sort((a,b)=>b[1]-a[1]);
+  renderToolTable(sorted, toolModule);
+}
+
+function renderToolTable(sorted, toolModule) {
   const tbody = document.getElementById('toolsTable');
-  if (tbody) {
-    const toolMeta = {};
-    data.forEach(x => { if (!toolMeta[x.tool_name]) toolMeta[x.tool_name] = { module: x.module_id, last: x.created_at }; });
-    tbody.innerHTML = sortedTools.length === 0
-      ? '<tr><td colspan="5" class="empty">暂无数据</td></tr>'
-      : sortedTools.map(([name,cnt],i) => {
-          const meta = toolMeta[name]||{};
-          return `<tr><td style="color:#64748b">${i+1}</td><td><strong>${name}</strong></td><td><span class="badge badge-purple">${MODULE_NAME[meta.module]||meta.module||'-'}</span></td><td><strong style="color:#6366f1">${cnt}</strong></td><td style="color:#94a3b8;font-size:.78rem">${meta.last?fmtTime(meta.last):'-'}</td></tr>`;
-        }).join('');
+  if (!tbody) return;
+  if (sorted.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="empty">暂无数据</td></tr>'; return; }
+  const toolCounts = {};
+  const toolMod = {};
+  allData.forEach(x => { toolCounts[x.tool_name]=(toolCounts[x.tool_name]||0)+1; toolMod[x.tool_name]=x.module_id; });
+  tbody.innerHTML = sorted.map(([name,cnt],i) => {
+    const mod = toolMod[name]||'';
+    return `<tr>
+      <td style="color:#64748b">${i+1}</td>
+      <td><strong>${name}</strong></td>
+      <td><span class="badge badge-purple">${MODULE_NAME[mod]||mod||'-'}</span></td>
+      <td><strong style="color:#6366f1">${cnt}</strong></td>
+      <td><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></td>
+      <td><button class="btn btn-outline btn-sm" onclick="showToast('可在内容编辑页修改此工具的Prompt')">编辑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterToolTable() {
+  const kw = (document.getElementById('toolSearch')?.value||'').toLowerCase();
+  const mod = document.getElementById('toolModuleFilter')?.value||'';
+  const toolCounts = {};
+  const toolModule = {};
+  allData.forEach(x => { toolCounts[x.tool_name]=(toolCounts[x.tool_name]||0)+1; toolModule[x.tool_name]=x.module_id; });
+  let sorted = Object.entries(toolCounts).sort((a,b)=>b[1]-a[1]);
+  if (kw) sorted = sorted.filter(([name])=>name.toLowerCase().includes(kw));
+  if (mod) sorted = sorted.filter(([name])=>toolModule[name]===mod);
+  renderToolTable(sorted, toolModule);
+}
+
+// 用户管理面板
+function renderUsersPanel() {
+  const users = {};
+  allData.filter(x=>x.user_email).forEach(x => {
+    if (!users[x.user_email]) users[x.user_email] = {name:x.user_name||x.user_email, email:x.user_email, count:0, last:x.created_at};
+    users[x.user_email].count++;
+  });
+  const list = Object.values(users).sort((a,b)=>b.count-a.count);
+  const anon = allData.filter(x=>!x.user_email).length;
+  const loggedin = allData.filter(x=>x.user_email).length;
+
+  safeSet('userCount', list.length + ' 人');
+  safeSet('k-anon', anon);
+  safeSet('k-loggedin', loggedin);
+
+  const el = document.getElementById('userList');
+  if (!el) return;
+  if (list.length === 0) {
+    el.innerHTML = '<div class="empty">暂无注册用户使用记录<br><small style="color:#475569">用户注册登录后使用工具会在此显示</small></div>';
+    return;
   }
+  el.innerHTML = list.map(u =>
+    `<div class="user-row">
+      <div class="user-avatar">${(u.name||u.email)[0].toUpperCase()}</div>
+      <div class="user-info">
+        <div class="user-name">${u.name||'-'}</div>
+        <div class="user-email">${u.email}</div>
+      </div>
+      <div class="user-meta">
+        <div>使用 <strong style="color:#6366f1">${u.count}</strong> 次</div>
+        <div style="margin-top:2px">${timeAgo(u.last)}</div>
+      </div>
+    </div>`
+  ).join('');
+}
 
-  // 使用记录表格（含用户账号）
-  const rtbody = document.getElementById('recordsTable');
-  if (rtbody) {
-    rtbody.innerHTML = data.length === 0
-      ? '<tr><td colspan="5" class="empty">暂无记录</td></tr>'
-      : data.slice(0,100).map(x => {
-          const userShow = x.user_email
-            ? `<div style="font-size:.82rem;font-weight:600">${x.user_name||x.user_email}</div><div style="font-size:.7rem;color:#64748b">${x.user_email}</div>`
-            : `<span style="color:#64748b;font-size:.78rem">未登录访客</span>`;
-          return `<tr><td style="white-space:nowrap;color:#94a3b8;font-size:.78rem">${fmtTime(x.created_at)}</td><td>${userShow}</td><td><strong>${x.tool_name}</strong></td><td><span class="badge badge-blue">${MODULE_NAME[x.module_id]||x.module_id||'-'}</span></td><td style="font-size:.8rem">${devIcon(x.user_agent)}</td></tr>`;
-        }).join('');
-  }
+function filterUsers(kw) {
+  if (!kw) { renderUsersPanel(); return; }
+  const users = {};
+  allData.filter(x=>x.user_email).forEach(x => {
+    if (!users[x.user_email]) users[x.user_email] = {name:x.user_name||x.user_email,email:x.user_email,count:0,last:x.created_at};
+    users[x.user_email].count++;
+  });
+  const list = Object.values(users).filter(u=>u.name.includes(kw)||u.email.includes(kw));
+  const el = document.getElementById('userList');
+  if (!el) return;
+  if (list.length === 0) { el.innerHTML = '<div class="empty">未找到匹配用户</div>'; return; }
+  el.innerHTML = list.map(u =>
+    `<div class="user-row">
+      <div class="user-avatar">${(u.name||u.email)[0].toUpperCase()}</div>
+      <div class="user-info"><div class="user-name">${u.name}</div><div class="user-email">${u.email}</div></div>
+      <div class="user-meta">使用 <strong style="color:#6366f1">${u.count}</strong> 次</div>
+    </div>`
+  ).join('');
+}
 
-  // 注册用户KPI & 工具数
-  safeSet('k-users', new Set(data.filter(x=>x.user_email).map(x=>x.user_email)).size);
-  safeSet('k-tools', toolSet.size);
+// 使用记录面板
+function renderRecordsPanel() {
+  renderRecordTable(allData);
+}
 
-  // 模块柱状图
+function renderRecordTable(data) {
+  const tbody = document.getElementById('recordsTable');
+  if (!tbody) return;
+  if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="empty">暂无记录</td></tr>'; return; }
+  tbody.innerHTML = data.slice(0,200).map(x => {
+    const userShow = x.user_email
+      ? `<div style="font-size:.82rem;font-weight:600">${x.user_name||x.user_email}</div><div style="font-size:.7rem;color:#64748b">${x.user_email}</div>`
+      : `<span style="color:#64748b;font-size:.78rem">未登录访客</span>`;
+    return `<tr>
+      <td style="white-space:nowrap;color:#94a3b8;font-size:.78rem">${fmtTime(x.created_at)}</td>
+      <td>${userShow}</td>
+      <td><strong>${x.tool_name}</strong></td>
+      <td><span class="badge badge-blue">${MODULE_NAME[x.module_id]||x.module_id||'-'}</span></td>
+      <td style="font-size:.8rem">${devIcon(x.user_agent)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function filterRecords() {
+  const kw = (document.getElementById('recordSearch')?.value||'').toLowerCase();
+  const mod = document.getElementById('recordModuleFilter')?.value||'';
+  let data = allData;
+  if (kw) data = data.filter(x=>x.tool_name.toLowerCase().includes(kw)||(x.user_email||'').toLowerCase().includes(kw)||(x.user_name||'').toLowerCase().includes(kw));
+  if (mod) data = data.filter(x=>x.module_id===mod);
+  renderRecordTable(data);
+}
+
+// 模块统计面板
+function renderStatsPanel() {
+  if (allData.length === 0) return;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayData = allData.filter(x=>new Date(x.created_at)>=today);
+  const moduleCounts = {};
+  allData.forEach(x => { moduleCounts[x.module_id]=(moduleCounts[x.module_id]||0)+1; });
   const maxVal = Math.max(...Object.values(moduleCounts), 1);
-  const moduleEl = document.getElementById('moduleChart');
   const moduleOrder = ['analysis','design','development','implementation','evaluation','promotion','innovation'];
-  if (moduleEl) moduleEl.innerHTML = Object.keys(moduleCounts).length === 0
-    ? '<div class="empty">暂无数据</div>'
-    : moduleOrder.map(key => {
-        const cnt = moduleCounts[key]||0;
-        const pct = Math.round(cnt/maxVal*100);
-        return `<div class="module-bar-row"><div class="module-bar-label" title="${MODULE_NAME[key]||key}">${MODULE_NAME[key]||key}</div><div class="module-bar-track"><div class="module-bar-fill" style="width:${pct}%">${cnt>0?cnt:''}</div></div><div class="module-bar-count">${cnt}</div></div>`;
-      }).join('');
+  const el = document.getElementById('moduleChart');
+  if (el) el.innerHTML = moduleOrder.map(key => {
+    const cnt = moduleCounts[key]||0;
+    const pct = Math.round(cnt/maxVal*100);
+    return `<div class="module-bar-row">
+      <div class="module-bar-label" title="${MODULE_NAME[key]}">${MODULE_NAME[key]||key}</div>
+      <div class="module-bar-track"><div class="module-bar-fill" style="width:${pct}%">${cnt>0?cnt:''}</div></div>
+      <div class="module-bar-count">${cnt}</div>
+    </div>`;
+  }).join('');
+
+  // 工具排行
+  const toolCounts = {};
+  allData.forEach(x=>{toolCounts[x.tool_name]=(toolCounts[x.tool_name]||0)+1;});
+  const sortedTools = Object.entries(toolCounts).sort((a,b)=>b[1]-a[1]);
+  const rankEl = document.getElementById('toolRankList');
+  if (rankEl) rankEl.innerHTML = sortedTools.slice(0,10).map(([name,cnt],i)=>
+    `<div class="hot-item"><span class="hot-rank">${i+1}</span><span class="hot-name">${name}</span><span class="hot-count">${cnt}次</span></div>`
+  ).join('') || '<div class="empty">暂无数据</div>';
+
+  // 今日活跃
+  const todayCounts = {};
+  todayData.forEach(x=>{todayCounts[x.tool_name]=(todayCounts[x.tool_name]||0)+1;});
+  const todaySorted = Object.entries(todayCounts).sort((a,b)=>b[1]-a[1]);
+  const todayEl = document.getElementById('todayStats');
+  if (todayEl) todayEl.innerHTML = todayData.length === 0
+    ? '<div class="empty">今日暂无使用记录</div>'
+    : `<div style="color:#10b981;font-weight:700;font-size:1.1rem;margin-bottom:12px">今日共 ${todayData.length} 次使用</div>` +
+      todaySorted.slice(0,8).map(([name,cnt],i)=>
+        `<div class="hot-item"><span class="hot-rank">${i+1}</span><span class="hot-name">${name}</span><span class="hot-count">${cnt}次</span></div>`
+      ).join('');
 }
 
-function switchTab(id, btn) {
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-'+id).classList.add('active');
-  btn.classList.add('active');
+// 内容编辑 - 工具选择器
+function buildToolPicker() {
+  const modules = [
+    {id:'analysis',name:'需求分析',icon:'🔍'},
+    {id:'design',name:'课程设计',icon:'📐'},
+    {id:'development',name:'资料制作',icon:'🛠️'},
+    {id:'implementation',name:'互动体验',icon:'🎮'},
+    {id:'evaluation',name:'培训评估',icon:'📊'},
+    {id:'promotion',name:'课程宣发',icon:'📢'},
+    {id:'innovation',name:'创新场景',icon:'✨'},
+  ];
+  const toolCounts = {};
+  const toolModule = {};
+  allData.forEach(x=>{toolCounts[x.tool_name]=(toolCounts[x.tool_name]||0)+1;toolModule[x.tool_name]=x.module_id;});
+  const el = document.getElementById('toolPicker');
+  if (!el) return;
+  const byModule = {};
+  Object.keys(toolModule).forEach(name=>{
+    const m = toolModule[name];
+    if (!byModule[m]) byModule[m]=[];
+    byModule[m].push(name);
+  });
+  el.innerHTML = modules.map(m =>
+    `<div class="tool-picker-group">${m.icon} ${m.name}</div>` +
+    (byModule[m.id]||[]).map(name =>
+      `<div class="tool-picker-item" onclick="selectTool('${name.replace(/'/g,"\\'")}',this)">${name}</div>`
+    ).join('')
+  ).join('') || '<div class="empty">暂无工具数据</div>';
 }
 
-// 加载数据 - 多重保障
-document.addEventListener('DOMContentLoaded', function() {
-  loadData();
-  setInterval(loadData, 60000);
-});
-// 兜底：DOMContentLoaded可能已经触发
+function selectTool(name, el) {
+  document.querySelectorAll('.tool-picker-item').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  safeSet('editorToolName', name);
+  const editor = document.getElementById('promptEditor');
+  if (editor) {
+    editor.value = `// 工具：${name}\n// 此处为 Prompt 模板内容\n// 实际内容请在代码中查看 index.html 的 tools 数组\n\n请在这里编辑 ${name} 的 Prompt 模板...`;
+  }
+}
+
+function copyPrompt() {
+  const editor = document.getElementById('promptEditor');
+  if (editor) { navigator.clipboard.writeText(editor.value).then(()=>showToast('已复制到剪贴板','success')); }
+}
+
+// 导出
+function exportRecords() {
+  if (!allData.length) { showToast('暂无数据可导出'); return; }
+  const rows = [['时间','用户姓名','用户邮箱','工具名称','所属模块','设备']];
+  allData.forEach(x=>rows.push([fmtTime(x.created_at),x.user_name||'访客',x.user_email||'未登录',x.tool_name,MODULE_NAME[x.module_id]||x.module_id||'-',devIcon(x.user_agent)]));
+  downloadCSV(rows, 'trainer-ai-records.csv');
+  showToast('导出成功', 'success');
+}
+
+function exportUsers() {
+  const users = {};
+  allData.filter(x=>x.user_email).forEach(x=>{
+    if (!users[x.user_email]) users[x.user_email]={name:x.user_name||'',email:x.user_email,count:0,last:x.created_at};
+    users[x.user_email].count++;
+  });
+  const list = Object.values(users);
+  if (!list.length) { showToast('暂无用户数据'); return; }
+  const rows = [['用户姓名','邮箱','使用次数','最后活跃']];
+  list.forEach(u=>rows.push([u.name,u.email,u.count,fmtTime(u.last)]));
+  downloadCSV(rows, 'trainer-ai-users.csv');
+  showToast('导出成功', 'success');
+}
+
+function downloadCSV(rows, filename) {
+  const csv = '\uFEFF' + rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download = filename; a.click();
+}
+
+// toast
+function showToast(msg, type='info') {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'toast show' + (type==='success'?' success':'');
+  setTimeout(()=>el.classList.remove('show'), 2500);
+}
+
+// 启动
+document.addEventListener('DOMContentLoaded', loadData);
 if (document.readyState !== 'loading') loadData();
+setInterval(loadData, 60000);
 </script>
 </body>
 </html>
