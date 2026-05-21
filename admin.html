@@ -259,40 +259,31 @@ border-bottom:1px solid var(--border)}
         </div>
         <div class="kpi-card">
           <div class="kpi-label">今日使用次数</div>
-          <div class="kpi-value">1,284</div>
+          <div class="kpi-value" id="kpi-today">-</div>
           <div class="kpi-change up">↑ 12.5% 较昨日</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">注册用户数</div>
-          <div class="kpi-value">3,567</div>
+          <div class="kpi-label">总访问次数</div>
+          <div class="kpi-value" id="kpi-views">-</div>
           <div class="kpi-change up">↑ 89 本周新增</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">好评率</div>
-          <div class="kpi-value">96.8%</div>
+          <div class="kpi-label">工具使用总次数</div>
+          <div class="kpi-value" id="kpi-uses">-</div>
           <div class="kpi-change up">↑ 1.2% 较上月</div>
         </div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
         <div class="card">
-          <div class="card-header"><h3>🔥 热门工具 Top 5</h3></div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>#</th><th>工具名称</th><th>使用次数</th><th>占比</th></tr></thead>
-              <tbody>
-                <tr><td>1</td><td>📝 问卷智能设计器</td><td>342</td><td>26.6%</td></tr>
-                <tr><td>2</td><td>📑 PPT大纲转内容框架</td><td>278</td><td>21.7%</td></tr>
-                <tr><td>3</td><td>✍️ 课程简介文案生成器</td><td>196</td><td>15.3%</td></tr>
-                <tr><td>4</td><td>🎯 教学目标智能生成器</td><td>165</td><td>12.9%</td></tr>
-                <tr><td>5</td><td>📈 柯氏四级评估方案设计</td><td>134</td><td>10.4%</td></tr>
-              </tbody>
-            </table>
+          <div class="card-header"><h3>🔥 热门工具 Top 5</h3><span style="font-size:.75rem;color:var(--text-muted)">实时数据</span></div>
+          <div id="hotToolsList" style="padding:8px 0">
+            <div style="color:var(--text-muted);font-size:.85rem;padding:12px">加载中...</div>
           </div>
         </div>
         <div class="card">
-          <div class="card-header"><h3>💬 最新用户反馈</h3></div>
-          <div style="max-height:280px;overflow-y:auto">
+          <div class="card-header"><h3>📋 最新使用记录</h3><span style="font-size:.75rem;color:var(--text-muted)">实时数据</span></div>
+          <div id="recentFeedback" style="max-height:280px;overflow-y:auto">
             <div style="padding:10px 0;border-bottom:1px solid var(--border)">
               <div style="font-size:.85rem;font-weight:600">张教练</div>
               <div style="font-size:.8rem;color:var(--text-muted)">问卷设计器太好用了！节省了我半天时间 ⭐⭐⭐⭐⭐</div>
@@ -884,6 +875,69 @@ function renderModuleStats() {
   tbody.innerHTML = html;
 }
 
+// ========== Supabase 真实数据 ==========
+const SUPABASE_URL = 'https://omcxlxcamweynlgfvcqy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_XYLqYjkf-c3baMDdZ3yCgQ_37OCkSed';
+
+async function sbFetch(path, params='') {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}${params}`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    return await res.json();
+  } catch(e) { return null; }
+}
+
+async function loadRealStats() {
+  // 总工具使用次数
+  const totalEvents = await sbFetch('tool_events', '?select=id');
+  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+  const todayEvents = await sbFetch('tool_events', `?created_at=gte.${todayStart.toISOString()}&select=id`);
+  const pageViews = await sbFetch('page_views', '?select=id');
+  const todayViews = await sbFetch('page_views', `?created_at=gte.${todayStart.toISOString()}&select=id`);
+
+  if (totalEvents) {
+    document.getElementById('kpi-uses').textContent = totalEvents.length.toLocaleString();
+  }
+  if (todayEvents) {
+    document.getElementById('kpi-today').textContent = todayEvents.length.toLocaleString();
+  }
+  if (pageViews) {
+    document.getElementById('kpi-views').textContent = pageViews.length.toLocaleString();
+  }
+
+  // 热门工具 Top5
+  const toolStats = await sbFetch('tool_events', '?select=tool_name&order=created_at.desc&limit=500');
+  if (toolStats && toolStats.length > 0) {
+    const counts = {};
+    toolStats.forEach(r => { counts[r.tool_name] = (counts[r.tool_name] || 0) + 1; });
+    const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,5);
+    const container = document.getElementById('hotToolsList');
+    if (container) {
+      container.innerHTML = sorted.map((([name, cnt], i) => 
+        `<div class="hot-item"><span class="hot-rank">${i+1}</span><span class="hot-name">${name}</span><span class="hot-count">${cnt}次</span></div>`
+      )).join('');
+    }
+  }
+
+  // 最近访问记录
+  const recentEvents = await sbFetch('tool_events', '?select=tool_name,created_at&order=created_at.desc&limit=5');
+  if (recentEvents && recentEvents.length > 0) {
+    const container = document.getElementById('recentFeedback');
+    if (container) {
+      container.innerHTML = recentEvents.map(r => {
+        const t = new Date(r.created_at);
+        const timeStr = `${t.getMonth()+1}/${t.getDate()} ${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`;
+        return `<div class="feedback-item"><span>工具「${r.tool_name}」被使用</span><span class="feedback-time">${timeStr}</span></div>`;
+      }).join('');
+    }
+  }
+}
+
 // Init
 renderToolsTable(toolsList);
 renderUsersTable(usersList);
@@ -892,6 +946,10 @@ renderTrendChart();
 renderModuleBarChart();
 renderDAUChart();
 renderModuleStats();
+// 加载真实数据
+loadRealStats();
+// 每30秒刷新一次
+setInterval(loadRealStats, 30000);
 </script>
 </body>
 </html>
