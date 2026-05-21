@@ -871,6 +871,7 @@ function renderModuleStats() {
 // ========== Supabase 真实数据 ==========
 const SUPABASE_URL = 'https://omcxlxcamweynlgfvcqy.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_XYLqYjkf-c3baMDdZ3yCgQ_37OCkSed';
+const _v = Date.now(); // 缓存破坏版本号
 
 async function sbFetch(path, params='') {
   try {
