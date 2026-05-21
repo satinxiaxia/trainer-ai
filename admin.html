@@ -264,7 +264,6 @@ function render(data) {
         const pct = Math.round(cnt/maxVal*100);
         return `<div class="module-bar-row"><div class="module-bar-label" title="${MODULE_NAME[key]||key}">${MODULE_NAME[key]||key}</div><div class="module-bar-track"><div class="module-bar-fill" style="width:${pct}%">${cnt>0?cnt:''}</div></div><div class="module-bar-count">${cnt}</div></div>`;
       }).join('');
-  }
 }
 
 function switchTab(id, btn) {
