@@ -244,9 +244,8 @@ padding:6px 16px;border-radius:20px;font-size:.8rem;transition:all .2s}
     </div>
     <div class="modal-actions">
       <button class="btn-copy" onclick="copyPrompt()">📋 复制 Prompt</button>
-      <button class="btn-chatgpt" onclick="window.open('https://chat.openai.com','_blank')">💬 在 ChatGPT 中使用</button>
-      <button class="btn-claude" onclick="window.open('https://claude.ai','_blank')">🧠 在 Claude 中使用</button>
     </div>
+    <div id="toolRecommend" style="margin-top:16px"></div>
   </div>
 </div>
 
@@ -471,7 +470,7 @@ function renderModules() {
         <h3>${tool.name}</h3>
         <p class="card-desc">${tool.desc}</p>
         <span class="card-scene">${tool.scene}</span>
-        <button class="btn-use" onclick='openModal(${JSON.stringify(tool).replace(/'/g,"&#39;")})'>立即使用 →</button>
+        <button class="btn-use" onclick='openModal(${JSON.stringify({...tool,module:key}).replace(/'/g,"&#39;")})'>立即使用 →</button>
       </div>`;
     });
     html += `</div></section>`;
@@ -488,7 +487,7 @@ function renderInnovation() {
       <div class="card-icon">${tool.icon}</div>
       <h3>${tool.name}</h3>
       <p class="card-desc">${tool.desc}</p>
-      <button class="btn-use" onclick='openModal(${JSON.stringify(tool).replace(/'/g,"&#39;")})'>立即使用 →</button>
+      <button class="btn-use" onclick='openModal(${JSON.stringify({...tool,module:"innovation"}).replace(/'/g,"&#39;")})'>立即使用 →</button>
     </div>`;
   });
   grid.innerHTML = html;
@@ -506,6 +505,68 @@ function openModal(tool) {
   document.getElementById('modalPrompt').value = tool.prompt;
   document.getElementById('modalOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
+  // 动态工具推荐
+  renderToolRecommend(tool);
+}
+
+const AI_TOOLS_MAP = {
+  analysis: [
+    { name: 'DeepSeek', icon: '🤖', url: 'https://chat.deepseek.com', tag: '最优', desc: '中文理解强，培训需求分析首选' },
+    { name: 'Kimi', icon: '🚀', url: 'https://kimi.moonshot.cn', desc: '支持超长文档，上传资料直接分析' },
+    { name: '秘塔AI搜索', icon: '🔍', url: 'https://metaso.cn', desc: 'AI搜索无广告，行业调研效率极高' },
+    { name: '通义千问', icon: '🌐', url: 'https://tongyi.aliyun.com', desc: '小组讨论过程文档分析利器' }
+  ],
+  design: [
+    { name: 'DeepSeek', icon: '🤖', url: 'https://chat.deepseek.com', tag: '最优', desc: '课程大纲设计逻辑清晰，布鲁姆目标拆解准' },
+    { name: 'Kimi', icon: '🚀', url: 'https://kimi.moonshot.cn', desc: '上传现有材料生成课程框架' },
+    { name: '通义千问', icon: '🌐', url: 'https://tongyi.aliyun.com', desc: '免费額度大，课程设计辅助得力' }
+  ],
+  development: [
+    { name: '讯飞智文', icon: '📊', url: 'https://zhiwen.xfyun.cn', tag: '最优', desc: '一键生成套模式培训 PPT，中文适配最好' },
+    { name: 'Gamma', icon: '✨', url: 'https://gamma.app', desc: '设计感强，输入大纲自动生成美观课件' },
+    { name: 'WPS AI', icon: '📝', url: 'https://ai.wps.cn', desc: '无缝嵌入WPS，现有文档直接AI优化' },
+    { name: 'DeepSeek', icon: '🤖', url: 'https://chat.deepseek.com', desc: '题库生成和文案撰写全能力强' }
+  ],
+  implementation: [
+    { name: 'DeepSeek', icon: '🤖', url: 'https://chat.deepseek.com', tag: '最优', desc: '设计创意互动活动和角色扮演脉络清晰' },
+    { name: 'Kimi', icon: '🚀', url: 'https://kimi.moonshot.cn', desc: '课堂案例分析和研讨题设计' },
+    { name: '通义千问', icon: '🌐', url: 'https://tongyi.aliyun.com', desc: '情景模拟脚本和引导语言生成' }
+  ],
+  evaluation: [
+    { name: 'DeepSeek', icon: '🤖', url: 'https://chat.deepseek.com', tag: '最优', desc: '评估方案设计和问卷生成首选' },
+    { name: 'Kimi', icon: '🚀', url: 'https://kimi.moonshot.cn', desc: '上传评估数据直接分析生成报告' },
+    { name: '通义千问', icon: '🌐', url: 'https://tongyi.aliyun.com', desc: '数据可视化报告生成能力强' }
+  ],
+  promotion: [
+    { name: 'DeepSeek', icon: '🤖', url: 'https://chat.deepseek.com', tag: '最优', desc: '宣传文案和推文内容生成效果最佳' },
+    { name: '讯飞智文', icon: '📊', url: 'https://zhiwen.xfyun.cn', desc: '课程宣传PPT和海报文案一键生成' },
+    { name: '剧映AI', icon: '🎬', url: 'https://www.capcut.cn', desc: '定制宣传短视频脚本和数字人播报' },
+    { name: '通义千问', icon: '🌐', url: 'https://tongyi.aliyun.com', desc: '多渠道推广文案并行生成' }
+  ],
+  innovation: [
+    { name: 'DeepSeek', icon: '🤖', url: 'https://chat.deepseek.com', tag: '最优', desc: '构建个人知识库和 AI 分身第一选' },
+    { name: 'Kimi', icon: '🚀', url: 'https://kimi.moonshot.cn', desc: '个性化学习路径和超长文档处理' },
+    { name: '秘塔AI搜索', icon: '🔍', url: 'https://metaso.cn', desc: '培训趋势实时追踪和行业动态收集' },
+    { name: '通义千问', icon: '🌐', url: 'https://tongyi.aliyun.com', desc: '多语言适配和内容转化能力强' }
+  ]
+};
+
+function renderToolRecommend(tool) {
+  const el = document.getElementById('toolRecommend');
+  const moduleKey = tool.module || 'analysis';
+  const tools = AI_TOOLS_MAP[moduleKey] || AI_TOOLS_MAP.analysis;
+  let html = '<div style="border-top:1px solid #1e293b;padding-top:14px;margin-top:4px">';
+  html += '<p style="color:#94a3b8;font-size:.78rem;margin-bottom:10px;letter-spacing:.03em">💡 推荐 AI 工具（复制Prompt后直接跳转）</p>';
+  html += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+  tools.forEach(t => {
+    const tagHtml = t.tag ? `<span style="background:#7c3aed;color:#fff;font-size:.65rem;padding:1px 5px;border-radius:3px;margin-left:4px">${t.tag}</span>` : '';
+    html += `<button onclick="window.open('${t.url}','_blank')" title="${t.desc}" style="display:flex;flex-direction:column;align-items:flex-start;background:#1e293b;border:1px solid #334155;color:#e2e8f0;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:.82rem;transition:all .2s;min-width:100px" onmouseover="this.style.borderColor='#6366f1'" onmouseout="this.style.borderColor='#334155'">
+      <span style="font-weight:700">${t.icon} ${t.name}${tagHtml}</span>
+      <span style="color:#94a3b8;font-size:.7rem;margin-top:2px;text-align:left">${t.desc}</span>
+    </button>`;
+  });
+  html += '</div></div>';
+  el.innerHTML = html;
 }
 
 function closeModal() {
