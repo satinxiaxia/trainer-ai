@@ -572,7 +572,7 @@ function filterTools() {
     searchResultsEl = document.createElement('div');
     searchResultsEl.id = 'searchResults';
     searchResultsEl.style.cssText = 'padding:24px 0';
-    const mainEl = document.getElementById('mainContent') || document.querySelector('main') || document.querySelector('.modules-wrapper');
+    const mainEl = document.getElementById('modulesContainer');
     mainEl.parentNode.insertBefore(searchResultsEl, mainEl);
   }
 
