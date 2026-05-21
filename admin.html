@@ -890,40 +890,33 @@ async function sbFetch(path, params='') {
   } catch(e) { console.error('sbFetch exception', e); return null; }
 }
 
-async function sbCount(path, params='') {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}${params}`, {
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Prefer': 'count=exact',
-        'Range': '0-0'
-      }
-    });
-    const range = res.headers.get('content-range');
-    if (range) {
-      const match = range.match(/\/(\d+)/);
-      if (match) return parseInt(match[1]);
-    }
-    const data = await res.json();
-    return Array.isArray(data) ? data.length : 0;
-  } catch(e) { return 0; }
-}
-
 async function loadRealStats() {
   const todayStart = new Date(); todayStart.setHours(0,0,0,0);
   const todayISO = todayStart.toISOString();
 
-  // 用 sbCount 精确统计数量
-  const [totalUses, todayUses, totalViews] = await Promise.all([
-    sbCount('tool_events'),
-    sbCount('tool_events', `?created_at=gte.${todayISO}`),
-    sbCount('page_views')
+  // 并行拉取所有需要的数据（用 select=id 减少传输量，最多拉1000条）
+  const [allEvents, todayEvents, allViews, todayViews] = await Promise.all([
+    sbFetch('tool_events', '?select=id,tool_name,module_id,created_at&order=created_at.desc&limit=1000'),
+    sbFetch('tool_events', `?select=id&created_at=gte.${todayISO}`),
+    sbFetch('page_views', '?select=id&limit=1000'),
+    sbFetch('page_views', `?select=id&created_at=gte.${todayISO}`)
   ]);
 
+  // KPI 数字
+  const totalUses = allEvents ? allEvents.length : 0;
+  const todayUses = todayEvents ? todayEvents.length : 0;
+  const totalViews = allViews ? allViews.length : 0;
   document.getElementById('kpi-uses').textContent = totalUses.toLocaleString();
   document.getElementById('kpi-today').textContent = todayUses.toLocaleString();
   document.getElementById('kpi-views').textContent = totalViews.toLocaleString();
+
+  // 用户管理页 KPI
+  const uvPageTotal = document.getElementById('uv-page-total');
+  const uvPageToday = document.getElementById('uv-page-today');
+  const uvToolToday = document.getElementById('uv-tool-today');
+  if (uvPageTotal) uvPageTotal.textContent = totalViews.toLocaleString();
+  if (uvPageToday) uvPageToday.textContent = (todayViews ? todayViews.length : 0).toLocaleString();
+  if (uvToolToday) uvToolToday.textContent = todayUses.toLocaleString();
 
   // 热门工具 Top5
   const toolStats = await sbFetch('tool_events', '?select=tool_name&order=created_at.desc&limit=500');
@@ -961,34 +954,26 @@ async function loadRealStats() {
     }
   }
 
-  // 用户管理页：访问概览
-  const todayStart2 = new Date(); todayStart2.setHours(0,0,0,0);
-  const pvTotal = await sbFetch('page_views', '?select=id');
-  const pvToday = await sbFetch('page_views', `?created_at=gte.${todayStart2.toISOString()}&select=id`);
-  const teToday = await sbFetch('tool_events', `?created_at=gte.${todayStart2.toISOString()}&select=id`);
-  if (pvTotal) document.getElementById('uv-page-total') && (document.getElementById('uv-page-total').textContent = pvTotal.length.toLocaleString());
-  if (pvToday) document.getElementById('uv-page-today') && (document.getElementById('uv-page-today').textContent = pvToday.length.toLocaleString());
-  if (teToday) document.getElementById('uv-tool-today') && (document.getElementById('uv-tool-today').textContent = teToday.length.toLocaleString());
-
-  // 用户管理页：访问记录列表（合并 page_views + tool_events 最近100条）
+  // 用户管理页：利用上面已拉取的 allEvents 直接复用，不再重复请求
   const pvRecent = await sbFetch('page_views', '?select=created_at,user_agent&order=created_at.desc&limit=50');
-  const teRecent = await sbFetch('tool_events', '?select=created_at,user_agent,tool_name&order=created_at.desc&limit=50');
   const allRecords = [
     ...(pvRecent||[]).map(r => ({time: r.created_at, type: '📖 页面访问', content: '主页', ua: r.user_agent})),
-    ...(teRecent||[]).map(r => ({time: r.created_at, type: '🛠️ 工具使用', content: r.tool_name, ua: r.user_agent}))
+    ...(allEvents||[]).slice(0,50).map(r => ({time: r.created_at, type: '🛠️ 工具使用', content: r.tool_name, ua: r.user_agent||''}))
   ].sort((a,b) => new Date(b.time) - new Date(a.time)).slice(0,100);
 
   const tbody = document.getElementById('realVisitBody');
-  if (tbody && allRecords.length > 0) {
-    tbody.innerHTML = allRecords.map(r => {
-      const t = new Date(r.time);
-      const timeStr = `${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
-      const ua = r.ua || '';
-      const device = ua.includes('iPhone')||ua.includes('Android') ? '📱 手机' : ua.includes('iPad') ? '📱 平板' : '💻 电脑';
-      return `<tr><td style="white-space:nowrap;color:var(--text-muted);font-size:.8rem">${timeStr}</td><td>${r.type}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.content}</td><td>${device}</td></tr>`;
-    }).join('');
-  } else if (tbody) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">暂无访问记录</td></tr>';
+  if (tbody) {
+    if (allRecords.length > 0) {
+      tbody.innerHTML = allRecords.map(r => {
+        const t = new Date(r.time);
+        const timeStr = `${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+        const ua = r.ua || '';
+        const device = ua.includes('iPhone')||ua.includes('Android') ? '📱 手机' : ua.includes('iPad') ? '📱 平板' : '💻 电脑';
+        return `<tr><td style="white-space:nowrap;color:var(--text-muted);font-size:.8rem">${timeStr}</td><td>${r.type}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.content}</td><td>${device}</td></tr>`;
+      }).join('');
+    } else {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:30px">暂无访问记录，用户访问后将自动显示</td></tr>';
+    }
   }
 }
 
