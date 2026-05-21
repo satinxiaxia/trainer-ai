@@ -284,31 +284,7 @@ border-bottom:1px solid var(--border)}
         <div class="card">
           <div class="card-header"><h3>📋 最新使用记录</h3><span style="font-size:.75rem;color:var(--text-muted)">实时数据</span></div>
           <div id="recentFeedback" style="max-height:280px;overflow-y:auto">
-            <div style="padding:10px 0;border-bottom:1px solid var(--border)">
-              <div style="font-size:.85rem;font-weight:600">张教练</div>
-              <div style="font-size:.8rem;color:var(--text-muted)">问卷设计器太好用了！节省了我半天时间 ⭐⭐⭐⭐⭐</div>
-              <div style="font-size:.7rem;color:var(--text-muted);margin-top:4px">2小时前 · 问卷智能设计器</div>
-            </div>
-            <div style="padding:10px 0;border-bottom:1px solid var(--border)">
-              <div style="font-size:.85rem;font-weight:600">李老师</div>
-              <div style="font-size:.8rem;color:var(--text-muted)">PPT框架生成很专业，直接能用 ⭐⭐⭐⭐</div>
-              <div style="font-size:.7rem;color:var(--text-muted);margin-top:4px">5小时前 · PPT大纲转内容框架</div>
-            </div>
-            <div style="padding:10px 0;border-bottom:1px solid var(--border)">
-              <div style="font-size:.85rem;font-weight:600">王培训</div>
-              <div style="font-size:.8rem;color:var(--text-muted)">希望增加更多互动游戏模板 ⭐⭐⭐⭐</div>
-              <div style="font-size:.7rem;color:var(--text-muted);margin-top:4px">8小时前 · 破冰暖场游戏库</div>
-            </div>
-            <div style="padding:10px 0;border-bottom:1px solid var(--border)">
-              <div style="font-size:.85rem;font-weight:600">陈经理</div>
-              <div style="font-size:.8rem;color:var(--text-muted)">ROI计算器帮了大忙，管理层很满意 ⭐⭐⭐⭐⭐</div>
-              <div style="font-size:.7rem;color:var(--text-muted);margin-top:4px">1天前 · 培训ROI计算器</div>
-            </div>
-            <div style="padding:10px 0">
-              <div style="font-size:.85rem;font-weight:600">赵讲师</div>
-              <div style="font-size:.8rem;color:var(--text-muted)">柯氏评估方案很系统，直接套用 ⭐⭐⭐⭐⭐</div>
-              <div style="font-size:.7rem;color:var(--text-muted);margin-top:4px">1天前 · 柯氏四级评估方案设计</div>
-            </div>
+            <div style="color:var(--text-muted);font-size:.85rem;padding:20px;text-align:center">加载中...</div>
           </div>
         </div>
       </div>
@@ -902,30 +878,52 @@ async function sbFetch(path, params='') {
       headers: {
         'apikey': SUPABASE_KEY,
         'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
       }
     });
+    if (!res.ok) {
+      console.warn('sbFetch error', path, res.status, await res.text());
+      return null;
+    }
     return await res.json();
-  } catch(e) { return null; }
+  } catch(e) { console.error('sbFetch exception', e); return null; }
+}
+
+async function sbCount(path, params='') {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}${params}`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'count=exact',
+        'Range': '0-0'
+      }
+    });
+    const range = res.headers.get('content-range');
+    if (range) {
+      const match = range.match(/\/(\d+)/);
+      if (match) return parseInt(match[1]);
+    }
+    const data = await res.json();
+    return Array.isArray(data) ? data.length : 0;
+  } catch(e) { return 0; }
 }
 
 async function loadRealStats() {
-  // 总工具使用次数
-  const totalEvents = await sbFetch('tool_events', '?select=id');
   const todayStart = new Date(); todayStart.setHours(0,0,0,0);
-  const todayEvents = await sbFetch('tool_events', `?created_at=gte.${todayStart.toISOString()}&select=id`);
-  const pageViews = await sbFetch('page_views', '?select=id');
-  const todayViews = await sbFetch('page_views', `?created_at=gte.${todayStart.toISOString()}&select=id`);
+  const todayISO = todayStart.toISOString();
 
-  if (totalEvents) {
-    document.getElementById('kpi-uses').textContent = totalEvents.length.toLocaleString();
-  }
-  if (todayEvents) {
-    document.getElementById('kpi-today').textContent = todayEvents.length.toLocaleString();
-  }
-  if (pageViews) {
-    document.getElementById('kpi-views').textContent = pageViews.length.toLocaleString();
-  }
+  // 用 sbCount 精确统计数量
+  const [totalUses, todayUses, totalViews] = await Promise.all([
+    sbCount('tool_events'),
+    sbCount('tool_events', `?created_at=gte.${todayISO}`),
+    sbCount('page_views')
+  ]);
+
+  document.getElementById('kpi-uses').textContent = totalUses.toLocaleString();
+  document.getElementById('kpi-today').textContent = todayUses.toLocaleString();
+  document.getElementById('kpi-views').textContent = totalViews.toLocaleString();
 
   // 热门工具 Top5
   const toolStats = await sbFetch('tool_events', '?select=tool_name&order=created_at.desc&limit=500');
@@ -941,16 +939,25 @@ async function loadRealStats() {
     }
   }
 
-  // 最近访问记录（概览卖）
-  const recentEvents = await sbFetch('tool_events', '?select=tool_name,created_at&order=created_at.desc&limit=5');
-  if (recentEvents && recentEvents.length > 0) {
-    const container = document.getElementById('recentFeedback');
-    if (container) {
+  // 最近使用记录（最新10条）
+  const recentEvents = await sbFetch('tool_events', '?select=tool_name,module_id,created_at&order=created_at.desc&limit=10');
+  const container = document.getElementById('recentFeedback');
+  if (container) {
+    if (recentEvents && recentEvents.length > 0) {
+      const moduleEmoji = {analysis:'🔍',design:'📐',development:'🛠️',implementation:'🎮',evaluation:'📊',promotion:'📢',innovation:'✨',unknown:'🔧'};
       container.innerHTML = recentEvents.map(r => {
         const t = new Date(r.created_at);
-        const timeStr = `${t.getMonth()+1}/${t.getDate()} ${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`;
-        return `<div class="feedback-item"><span>工具「${r.tool_name}」被使用</span><span class="feedback-time">${timeStr}</span></div>`;
+        const now = new Date();
+        const diffMin = Math.floor((now - t) / 60000);
+        const timeStr = diffMin < 1 ? '刚刚' : diffMin < 60 ? `${diffMin}分钟前` : diffMin < 1440 ? `${Math.floor(diffMin/60)}小时前` : `${Math.floor(diffMin/1440)}天前`;
+        const emoji = moduleEmoji[r.module_id] || '🔧';
+        return `<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+          <div><span style="font-size:.85rem">${emoji} <strong>${r.tool_name}</strong></span><br><span style="font-size:.75rem;color:var(--text-muted)">被使用</span></div>
+          <span style="font-size:.75rem;color:var(--text-muted);white-space:nowrap">${timeStr}</span>
+        </div>`;
       }).join('');
+    } else {
+      container.innerHTML = '<div style="color:var(--text-muted);font-size:.85rem;padding:20px;text-align:center">暂无使用记录<br><span style="font-size:.75rem">用户使用工具后将自动记录</span></div>';
     }
   }
 
