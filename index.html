@@ -21,10 +21,10 @@ button{cursor:pointer;border:none;font-family:inherit}
 /* 左侧导航栏 - 常驻显示 */
 .sidenav{position:fixed;left:0;top:64px;bottom:0;width:200px;background:#0c1527;border-right:1px solid var(--border);overflow-y:auto;z-index:100;scrollbar-width:thin;scrollbar-color:#334155 transparent}
 .sidenav-inner{padding:12px 0 80px}
-.sidenav-module{padding:10px 14px 4px;font-size:.65rem;color:#475569;text-transform:uppercase;letter-spacing:.08em;font-weight:700;display:flex;align-items:center;gap:5px;margin-top:4px}
-.sidenav-tool{display:block;padding:6px 14px 6px 24px;font-size:.78rem;color:#64748b;cursor:pointer;transition:.15s;border-left:2px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sidenav-tool:hover{color:#e2e8f0;background:rgba(99,102,241,0.1);border-left-color:#6366f1;color:#a5b4fc}
-.sidenav-tool.active{color:#6366f1;border-left-color:#6366f1;font-weight:600;background:rgba(99,102,241,0.08)}
+.sidenav-module{padding:10px 14px 4px;font-size:.68rem;color:#a5b4fc;text-transform:uppercase;letter-spacing:.06em;font-weight:700;display:flex;align-items:center;gap:5px;margin-top:6px}
+.sidenav-tool{display:block;padding:7px 14px 7px 24px;font-size:.82rem;color:#cbd5e1;cursor:pointer;transition:.15s;border-left:2px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidenav-tool:hover{color:#fff;background:rgba(99,102,241,0.15);border-left-color:#6366f1}
+.sidenav-tool.active{color:#a5b4fc;border-left-color:#6366f1;font-weight:600;background:rgba(99,102,241,0.12)}
 .sidenav-toggle{display:none}
 .sidenav-overlay{display:none}
 .page-wrapper{margin-left:200px}
@@ -801,6 +801,7 @@ function logout() {
 function buildSidenav() {
   const inner = document.getElementById('sidenavInner');
   if (!inner) return;
+  // 直接读取已渲染到DOM里的工具卡片，按模块分组
   const moduleOrder = [
     {key:'analysis', icon:'🔍', name:'需求分析'},
     {key:'design', icon:'📐', name:'课程设计'},
@@ -810,54 +811,41 @@ function buildSidenav() {
     {key:'promotion', icon:'📢', name:'课程宣发'},
     {key:'innovation', icon:'✨', name:'创新场景'},
   ];
-  let html = '';
+  let html = '<div style="padding:12px 14px 8px;font-size:.75rem;font-weight:700;color:#6366f1;border-bottom:1px solid #1e293b;margin-bottom:4px">⚡ 快捷导航</div>';
   moduleOrder.forEach(m => {
-    const mod = modules.find(x => x.key === m.key);
-    const toolList = m.key === 'innovation' ? innovationModule.tools : (mod ? mod.tools : []);
+    const allMods = m.key === 'innovation' ? [innovationModule] : modules.filter(x => x.key === m.key);
+    const mod = allMods[0];
+    if (!mod || !mod.tools || !mod.tools.length) return;
     html += `<div class="sidenav-module">${m.icon} ${m.name}</div>`;
-    toolList.forEach(tool => {
-      const tid = 'tool-' + (tool.name||'').replace(/[\s/]/g,'_');
-      html += `<div class="sidenav-tool" onclick="scrollToTool('${tid}')" title="${tool.name}">${tool.name}</div>`;
+    mod.tools.forEach(tool => {
+      const safeName = (tool.name||'').replace(/'/g,"&apos;");
+      html += `<div class="sidenav-tool" onclick="jumpToTool(this,'${safeName}')">${tool.name}</div>`;
     });
   });
   inner.innerHTML = html;
 }
 
-function scrollToTool(tid) {
-  // 找到对应卡片
-  let el = document.getElementById(tid);
-  if (!el) {
-    // 通过工具名称找
-    const name = tid.replace('tool-','').replace(/_/g,' ');
-    const cards = document.querySelectorAll('.tool-card, .innovation-card');
-    for (const c of cards) {
-      if ((c.querySelector('h3')||{}).textContent?.trim() === name) { el = c; break; }
-    }
+function jumpToTool(el, toolName) {
+  // 通过 h3 文字匹配找到卡片
+  const cards = document.querySelectorAll('.tool-card, .innovation-card');
+  let target = null;
+  for (const c of cards) {
+    const h3 = c.querySelector('h3');
+    if (h3 && h3.textContent.trim() === toolName) { target = c; break; }
   }
-  if (el) {
-    el.scrollIntoView({behavior:'smooth', block:'center'});
-    el.style.boxShadow = '0 0 0 2px #6366f1, 0 8px 32px rgba(99,102,241,0.4)';
-    setTimeout(() => el.style.boxShadow = '', 1500);
-    // 更新活跃状态
-    document.querySelectorAll('.sidenav-tool').forEach(t => t.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+  if (target) {
+    target.scrollIntoView({behavior:'smooth', block:'center'});
+    target.style.outline = '2px solid #6366f1';
+    target.style.transition = 'outline .3s';
+    setTimeout(() => { target.style.outline = ''; }, 1800);
   }
+  document.querySelectorAll('.sidenav-tool').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
 }
 
-let sidenavOpen = false;
-function toggleSidenav() {
-  sidenavOpen = !sidenavOpen;
-  const nav = document.getElementById('sidenav');
-  const toggle = document.getElementById('sidenavToggle');
-  const overlay = document.getElementById('sidenavOverlay');
-  if (nav) nav.style.transform = sidenavOpen ? 'translateX(0)' : 'translateX(-100%)';
-  if (toggle) { toggle.style.left = sidenavOpen ? '220px' : '0'; toggle.innerHTML = sidenavOpen ? '✕<br>关闭' : '☰<br>工具'; }
-  if (overlay) overlay.classList.toggle('show', sidenavOpen);
-}
-
-// 页面渲染完成后构建侧边栏
+// 渲染完成后 800ms 再建侧边栏，确保工具卡片已在 DOM 里
 window.addEventListener('DOMContentLoaded', function() {
-  setTimeout(buildSidenav, 300);
+  setTimeout(buildSidenav, 800);
 });
 </script>
 </body>
