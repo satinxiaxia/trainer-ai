@@ -546,17 +546,53 @@ function filterModule(key, btn) {
 
 function filterTools() {
   const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  let searchResultsEl = document.getElementById('searchResults');
+
+  if (!q) {
+    // 无搜索词：还原正常视图
+    if (searchResultsEl) searchResultsEl.remove();
+    document.querySelectorAll('.module-section, #innovationSection').forEach(s => s.style.display = '');
+    document.querySelectorAll('.tool-card, .innovation-card').forEach(card => card.style.display = '');
+    return;
+  }
+
+  // 隐藏所有模块
+  document.querySelectorAll('.module-section, #innovationSection').forEach(s => s.style.display = 'none');
+
+  // 收集所有匹配工具
+  const matched = [];
   document.querySelectorAll('.tool-card, .innovation-card').forEach(card => {
     const name = (card.dataset.name || '').toLowerCase();
     const text = card.textContent.toLowerCase();
-    card.style.display = (!q || name.includes(q) || text.includes(q)) ? '' : 'none';
+    if (name.includes(q) || text.includes(q)) matched.push(card.cloneNode(true));
   });
-  if (q) {
-    document.querySelectorAll('.module-section').forEach(s => s.style.display = '');
-    document.getElementById('innovationSection').style.display = '';
-    document.querySelectorAll('.nav-filter button').forEach(b => b.classList.remove('active'));
-    document.querySelector('.nav-filter button').classList.add('active');
+
+  // 创建或更新搜索结果区
+  if (!searchResultsEl) {
+    searchResultsEl = document.createElement('div');
+    searchResultsEl.id = 'searchResults';
+    searchResultsEl.style.cssText = 'padding:24px 0';
+    const mainEl = document.getElementById('mainContent') || document.querySelector('main') || document.querySelector('.modules-wrapper');
+    mainEl.parentNode.insertBefore(searchResultsEl, mainEl);
   }
+
+  if (matched.length === 0) {
+    searchResultsEl.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#94a3b8">未找到相关工具，试试其他关键词</div>';
+  } else {
+    searchResultsEl.innerHTML = `<div style="max-width:1200px;margin:0 auto;padding:0 20px">
+      <p style="color:#94a3b8;font-size:.9rem;margin-bottom:16px">找到 ${matched.length} 个相关工具</p>
+      <div class="tools-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px"></div>
+    </div>`;
+    const grid = searchResultsEl.querySelector('.tools-grid');
+    matched.forEach(card => {
+      card.style.display = '';
+      grid.appendChild(card);
+    });
+  }
+
+  // 重置 filter 按钮
+  document.querySelectorAll('.nav-filter button').forEach(b => b.classList.remove('active'));
+  document.querySelector('.nav-filter button').classList.add('active');
 }
 
 // Navbar scroll
