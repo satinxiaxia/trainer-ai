@@ -5,979 +5,300 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TrainerAI 管理后台</title>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
---primary:#1e3a5f;--accent:#6366f1;--accent2:#8b5cf6;--bg:#0f172a;--card:#1e293b;
---card-hover:#253348;--text:#e2e8f0;--text-muted:#94a3b8;--border:#334155;
---success:#10b981;--warning:#f59e0b;--danger:#ef4444;--gradient:linear-gradient(135deg,#6366f1,#8b5cf6);
---radius:12px;--shadow:0 4px 24px rgba(0,0,0,0.3);
---sidebar-width:240px;
-}
-html{scroll-behavior:smooth;font-size:16px}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'PingFang SC','Microsoft YaHei',sans-serif;
-background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
-a{color:inherit;text-decoration:none}
-button{cursor:pointer;border:none;font-family:inherit}
-input,select,textarea{font-family:inherit}
-
-/* LAYOUT */
-.admin-layout{display:flex;min-height:100vh}
-
-/* SIDEBAR */
-.sidebar{width:var(--sidebar-width);background:var(--card);border-right:1px solid var(--border);
-position:fixed;top:0;left:0;bottom:0;z-index:100;display:flex;flex-direction:column;transition:transform .3s}
-.sidebar-brand{padding:20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
-.sidebar-logo{width:36px;height:36px;background:var(--gradient);border-radius:8px;display:flex;
-align-items:center;justify-content:center;font-size:1.1rem}
-.sidebar-brand span{font-weight:700;font-size:1rem}
-.sidebar-nav{flex:1;padding:12px;overflow-y:auto}
-.sidebar-nav .nav-label{font-size:.7rem;text-transform:uppercase;color:var(--text-muted);
-letter-spacing:1px;padding:12px 12px 6px;font-weight:600}
-.sidebar-nav a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;
-font-size:.9rem;color:var(--text-muted);transition:all .2s;margin-bottom:2px;cursor:pointer}
-.sidebar-nav a:hover{background:rgba(99,102,241,0.1);color:var(--text)}
-.sidebar-nav a.active{background:var(--gradient);color:#fff;font-weight:600}
-.sidebar-nav a .nav-icon{font-size:1.1rem;width:24px;text-align:center}
-.sidebar-footer{padding:16px;border-top:1px solid var(--border)}
-.sidebar-footer a{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;
-color:var(--text-muted);font-size:.85rem;transition:all .2s}
-.sidebar-footer a:hover{color:var(--text);background:rgba(255,255,255,0.05)}
-
-/* MAIN */
-.main-content{margin-left:var(--sidebar-width);flex:1;min-height:100vh}
-.topbar{position:sticky;top:0;background:rgba(15,23,42,0.92);backdrop-filter:blur(16px);
-border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;
-justify-content:space-between;z-index:50}
-.topbar h1{font-size:1.2rem;font-weight:700}
-.topbar-right{display:flex;align-items:center;gap:12px}
-.topbar-user{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--text-muted)}
-.topbar-avatar{width:32px;height:32px;background:var(--gradient);border-radius:50%;
-display:flex;align-items:center;justify-content:center;font-size:.8rem;color:#fff}
-.content-area{padding:24px}
-
-/* PAGE SECTIONS */
-.page{display:none}
-.page.active{display:block}
-
-/* KPI CARDS */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px}
-.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
-padding:20px;position:relative;overflow:hidden}
-.kpi-card::after{content:'';position:absolute;top:0;right:0;width:80px;height:80px;
-background:var(--gradient);opacity:.05;border-radius:50%;transform:translate(20px,-20px)}
-.kpi-card .kpi-label{font-size:.8rem;color:var(--text-muted);margin-bottom:8px}
-.kpi-card .kpi-value{font-size:2rem;font-weight:800;background:var(--gradient);-webkit-background-clip:text;
--webkit-text-fill-color:transparent;background-clip:text}
-.kpi-card .kpi-change{font-size:.75rem;margin-top:4px}
-.kpi-card .kpi-change.up{color:var(--success)}
-.kpi-card .kpi-change.down{color:var(--danger)}
-
-/* CARDS */
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px}
-.card h3{font-size:1rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-.card-header h3{margin-bottom:0}
-
-/* TABLES */
-.table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse}
-th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);font-size:.85rem}
-th{color:var(--text-muted);font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.5px}
-tr:hover td{background:rgba(99,102,241,0.05)}
-.status{display:inline-block;padding:2px 10px;border-radius:10px;font-size:.75rem;font-weight:600}
-.status-active{background:rgba(16,185,129,0.15);color:#10b981}
-.status-inactive{background:rgba(239,68,68,0.15);color:#ef4444}
-.status-pending{background:rgba(245,158,11,0.15);color:#f59e0b}
-
-/* TOGGLE */
-.toggle{width:44px;height:24px;background:var(--border);border-radius:12px;position:relative;
-cursor:pointer;transition:background .2s}
-.toggle.on{background:var(--accent)}
-.toggle::after{content:'';width:18px;height:18px;background:#fff;border-radius:50%;
-position:absolute;top:3px;left:3px;transition:transform .2s}
-.toggle.on::after{transform:translateX(20px)}
-
-/* BUTTONS */
-.btn{padding:8px 16px;border-radius:8px;font-size:.85rem;font-weight:600;transition:all .2s}
-.btn-primary{background:var(--gradient);color:#fff}
-.btn-primary:hover{opacity:.85;transform:translateY(-1px)}
-.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
-.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
-.btn-danger{background:rgba(239,68,68,0.15);color:var(--danger)}
-.btn-danger:hover{background:rgba(239,68,68,0.25)}
-.btn-sm{padding:4px 10px;font-size:.75rem}
-.btn-group{display:flex;gap:6px}
-
-/* FORM */
-.form-group{margin-bottom:16px}
-.form-group label{display:block;font-size:.85rem;font-weight:600;margin-bottom:6px}
-.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 14px;
-background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;color:var(--text);
-font-size:.9rem;outline:none;transition:border-color .2s}
-.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent)}
-.form-group textarea{min-height:120px;resize:vertical}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-
-/* BAR CHART */
-.bar-chart{display:flex;align-items:flex-end;gap:12px;height:200px;padding:16px 0}
-.bar-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px}
-.bar-item .bar{width:100%;border-radius:6px 6px 0 0;background:var(--gradient);
-transition:height .6s ease;min-width:30px;max-width:60px}
-.bar-item .bar-label{font-size:.7rem;color:var(--text-muted);text-align:center}
-.bar-item .bar-value{font-size:.75rem;font-weight:600;color:var(--text)}
-
-/* TREND LINE (CSS only) */
-.trend-chart{display:flex;align-items:flex-end;gap:2px;height:160px;padding:16px 0 0;
-border-bottom:1px solid var(--border);margin-bottom:8px}
-.trend-bar{flex:1;background:rgba(99,102,241,0.6);border-radius:2px 2px 0 0;transition:height .4s;min-width:8px}
-.trend-bar:hover{background:var(--accent)}
-.trend-labels{display:flex;gap:2px}
-.trend-labels span{flex:1;text-align:center;font-size:.6rem;color:var(--text-muted)}
-
-/* SEARCH */
-.search-box{position:relative;max-width:300px}
-.search-box input{width:100%;padding:8px 14px 8px 36px;background:rgba(0,0,0,0.3);
-border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.85rem;outline:none}
-.search-box input:focus{border-color:var(--accent)}
-.search-box .s-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted)}
-
-/* USER AVATAR */
-.user-avatar{width:36px;height:36px;border-radius:50%;background:var(--gradient);display:flex;
-align-items:center;justify-content:center;font-size:.85rem;color:#fff;flex-shrink:0}
-.user-cell{display:flex;align-items:center;gap:10px}
-.user-cell .uname{font-weight:600;font-size:.85rem}
-.user-cell .umeta{font-size:.75rem;color:var(--text-muted)}
-
-/* TWO COL */
-.two-col{display:grid;grid-template-columns:300px 1fr;gap:20px}
-
-/* TOOL LIST */
-.tool-list-item{padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;
-cursor:pointer;transition:all .2s}
-.tool-list-item:hover,.tool-list-item.selected{border-color:var(--accent);background:rgba(99,102,241,0.08)}
-.tool-list-item .tli-name{font-weight:600;font-size:.9rem}
-.tool-list-item .tli-mod{font-size:.75rem;color:var(--text-muted)}
-
-/* FILTER */
-.filter-bar{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
-.filter-bar select{padding:6px 12px;background:var(--card);border:1px solid var(--border);
-border-radius:8px;color:var(--text);font-size:.85rem;outline:none}
-
-/* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);
-z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;
-opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}
-.modal-overlay.active{opacity:1;visibility:visible}
-.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;
-width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:24px;position:relative;
-transform:translateY(20px);transition:transform .3s}
-.modal-overlay.active .modal{transform:translateY(0)}
-.modal-close{position:absolute;top:12px;right:12px;width:28px;height:28px;background:rgba(255,255,255,0.1);
-border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1rem;
-color:var(--text-muted);cursor:pointer}
-.modal h2{font-size:1.1rem;font-weight:700;margin-bottom:16px;padding-right:30px}
-
-/* TOAST */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
-background:#10b981;color:#fff;padding:10px 24px;border-radius:8px;font-size:.9rem;font-weight:600;
-opacity:0;transition:opacity .3s,transform .3s;z-index:3000;pointer-events:none}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-/* SETTINGS */
-.setting-item{display:flex;justify-content:space-between;align-items:center;padding:16px 0;
-border-bottom:1px solid var(--border)}
-.setting-item:last-child{border-bottom:none}
-.setting-item .si-label{font-weight:600;font-size:.9rem}
-.setting-item .si-desc{font-size:.8rem;color:var(--text-muted);margin-top:2px}
-
-/* MOBILE */
-.sidebar-toggle{display:none;background:none;color:var(--text);font-size:1.4rem;padding:4px;cursor:pointer}
-@media(max-width:768px){
-.sidebar{transform:translateX(-100%)}
-.sidebar.open{transform:translateX(0)}
-.main-content{margin-left:0}
-.sidebar-toggle{display:block}
-.two-col{grid-template-columns:1fr}
-.form-row{grid-template-columns:1fr}
-.kpi-grid{grid-template-columns:repeat(2,1fr)}
-}
-
-/* SCROLLBAR */
-::-webkit-scrollbar{width:6px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+.header{background:#1e293b;border-bottom:1px solid #334155;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.header-brand{font-size:1.1rem;font-weight:700;background:linear-gradient(135deg,#6366f1,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-status{font-size:.8rem;color:#94a3b8}
+.header-status span{color:#10b981;font-weight:600}
+.container{max-width:1100px;margin:0 auto;padding:24px 16px}
+.section-title{font-size:1rem;font-weight:700;color:#e2e8f0;margin:28px 0 14px;display:flex;align-items:center;gap:8px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:8px}
+.kpi-card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;text-align:center}
+.kpi-label{font-size:.78rem;color:#94a3b8;margin-bottom:8px}
+.kpi-value{font-size:2rem;font-weight:800;background:linear-gradient(135deg,#6366f1,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.kpi-sub{font-size:.72rem;color:#64748b;margin-top:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:680px){.grid2{grid-template-columns:1fr}}
+.card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px}
+.card-title{font-size:.9rem;font-weight:700;margin-bottom:14px;color:#cbd5e1}
+.hot-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1e293b}
+.hot-item:last-child{border-bottom:none}
+.hot-rank{width:22px;height:22px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0}
+.hot-name{flex:1;font-size:.85rem}
+.hot-count{font-size:.78rem;color:#6366f1;font-weight:600;white-space:nowrap}
+.recent-item{padding:10px 0;border-bottom:1px solid #334155;display:flex;justify-content:space-between;align-items:flex-start}
+.recent-item:last-child{border-bottom:none}
+.recent-tool{font-size:.85rem;font-weight:600}
+.recent-time{font-size:.75rem;color:#94a3b8;white-space:nowrap;margin-left:10px}
+.recent-module{font-size:.72rem;color:#6366f1;margin-top:2px}
+.table-wrap{overflow-x:auto;margin-top:8px}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{text-align:left;padding:10px 12px;color:#94a3b8;border-bottom:1px solid #334155;font-weight:600;white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid #1e293b;vertical-align:middle}
+tr:hover td{background:#253348}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.72rem;font-weight:600}
+.badge-purple{background:#312e81;color:#a5b4fc}
+.badge-blue{background:#1e3a5f;color:#93c5fd}
+.loading{text-align:center;padding:40px;color:#64748b;font-size:.9rem}
+.empty{text-align:center;padding:30px;color:#64748b;font-size:.85rem}
+.refresh-btn{background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;padding:6px 16px;border-radius:8px;font-size:.82rem;cursor:pointer;font-weight:600}
+.refresh-btn:hover{opacity:.85}
+.back-btn{background:transparent;border:1px solid #334155;color:#94a3b8;padding:6px 14px;border-radius:6px;font-size:.82rem;cursor:pointer}
+.back-btn:hover{border-color:#6366f1;color:#e2e8f0}
+.tab-bar{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+.tab{padding:8px 16px;border-radius:8px;border:1px solid #334155;background:transparent;color:#94a3b8;cursor:pointer;font-size:.85rem;transition:all .2s}
+.tab.active{background:linear-gradient(135deg,#6366f1,#8b5cf6);border-color:transparent;color:#fff;font-weight:600}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.module-bar-wrap{margin-top:8px}
+.module-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:.82rem}
+.module-bar-label{width:100px;color:#94a3b8;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.module-bar-track{flex:1;background:#1e3a5f;border-radius:4px;height:18px;overflow:hidden}
+.module-bar-fill{height:100%;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:4px;transition:width .6s ease;display:flex;align-items:center;padding-left:6px;font-size:.7rem;font-weight:600;color:#fff;min-width:30px}
+.module-bar-count{width:36px;text-align:right;color:#94a3b8;flex-shrink:0}
+#lastUpdate{font-size:.72rem;color:#64748b}
 </style>
 </head>
 <body>
 
-<div class="admin-layout">
-<!-- SIDEBAR -->
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar-brand">
-    <div class="sidebar-logo">🦐</div>
-    <span>TrainerAI</span>
-  </div>
-  <nav class="sidebar-nav">
-    <div class="nav-label">主菜单</div>
-    <a class="active" onclick="switchPage('dashboard',this)"><span class="nav-icon">📊</span>数据概览</a>
-    <a onclick="switchPage('tools',this)"><span class="nav-icon">🛠️</span>工具管理</a>
-    <a onclick="switchPage('users',this)"><span class="nav-icon">👥</span>用户管理</a>
-    <a onclick="switchPage('content',this)"><span class="nav-icon">📝</span>内容编辑</a>
-    <div class="nav-label">分析</div>
-    <a onclick="switchPage('stats',this)"><span class="nav-icon">📈</span>使用统计</a>
-    <div class="nav-label">系统</div>
-    <a onclick="switchPage('settings',this)"><span class="nav-icon">⚙️</span>系统设置</a>
-  </nav>
-  <div class="sidebar-footer">
-    <a href="index.html" target="_blank">🌐 查看用户端</a>
-  </div>
-</aside>
-
-<!-- MAIN -->
-<main class="main-content">
-  <div class="topbar">
-    <div style="display:flex;align-items:center;gap:12px">
-      <button class="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
-      <h1 id="pageTitle">📊 数据概览</h1>
-    </div>
-    <div class="topbar-right">
-      <div class="topbar-user">
-        <span>管理员</span>
-        <div class="topbar-avatar">👤</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="content-area">
-    <!-- ===== DASHBOARD ===== -->
-    <div class="page active" id="page-dashboard">
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-label">总工具数</div>
-          <div class="kpi-value">42</div>
-          <div class="kpi-change up">↑ 6大模块覆盖</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">今日使用次数</div>
-          <div class="kpi-value" id="kpi-today">-</div>
-          <div class="kpi-change up">↑ 12.5% 较昨日</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">总访问次数</div>
-          <div class="kpi-value" id="kpi-views">-</div>
-          <div class="kpi-change up">↑ 89 本周新增</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">工具使用总次数</div>
-          <div class="kpi-value" id="kpi-uses">-</div>
-          <div class="kpi-change up">↑ 1.2% 较上月</div>
-        </div>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-        <div class="card">
-          <div class="card-header"><h3>🔥 热门工具 Top 5</h3><span style="font-size:.75rem;color:var(--text-muted)">实时数据</span></div>
-          <div id="hotToolsList" style="padding:8px 0">
-            <div style="color:var(--text-muted);font-size:.85rem;padding:12px">加载中...</div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header"><h3>📋 最新使用记录</h3><span style="font-size:.75rem;color:var(--text-muted)">实时数据</span></div>
-          <div id="recentFeedback" style="max-height:280px;overflow-y:auto">
-            <div style="color:var(--text-muted);font-size:.85rem;padding:20px;text-align:center">加载中...</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header"><h3>📈 近7天使用趋势</h3></div>
-        <div class="trend-chart" id="trendChart"></div>
-        <div class="trend-labels" id="trendLabels"></div>
-      </div>
-    </div>
-
-    <!-- ===== TOOLS MANAGEMENT ===== -->
-    <div class="page" id="page-tools">
-      <div class="card">
-        <div class="card-header">
-          <h3>🛠️ 工具列表</h3>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-primary" onclick="openToolModal()">+ 新增工具</button>
-          </div>
-        </div>
-        <div class="filter-bar">
-          <select id="toolModuleFilter" onchange="filterToolTable()">
-            <option value="all">全部模块</option>
-            <option value="analysis">🔍 需求分析</option>
-            <option value="design">📐 课程设计</option>
-            <option value="development">🛠️ 资料制作</option>
-            <option value="implementation">🎮 互动体验</option>
-            <option value="evaluation">📊 培训评估</option>
-            <option value="promotion">📢 课程宣发</option>
-            <option value="innovation">✨ 创新场景</option>
-          </select>
-          <div class="search-box">
-            <span class="s-icon">🔍</span>
-            <input type="text" placeholder="搜索工具..." id="toolSearchInput" oninput="filterToolTable()">
-          </div>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>工具名称</th><th>所属模块</th><th>状态</th><th>使用次数</th><th>操作</th></tr></thead>
-            <tbody id="toolsTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== USER MANAGEMENT ===== -->
-    <div class="page" id="page-users">
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-header">
-          <h3>📊 访问概览</h3>
-          <span style="font-size:.75rem;color:var(--text-muted)">真实数据 · 30秒自动刷新</span>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:4px 0">
-          <div style="background:var(--bg);border-radius:8px;padding:14px;text-align:center">
-            <div style="font-size:1.6rem;font-weight:700;color:#6366f1" id="uv-page-total">-</div>
-            <div style="font-size:.8rem;color:var(--text-muted);margin-top:4px">总页面访问</div>
-          </div>
-          <div style="background:var(--bg);border-radius:8px;padding:14px;text-align:center">
-            <div style="font-size:1.6rem;font-weight:700;color:#10b981" id="uv-page-today">-</div>
-            <div style="font-size:.8rem;color:var(--text-muted);margin-top:4px">今日访问</div>
-          </div>
-          <div style="background:var(--bg);border-radius:8px;padding:14px;text-align:center">
-            <div style="font-size:1.6rem;font-weight:700;color:#f59e0b" id="uv-tool-today">-</div>
-            <div style="font-size:.8rem;color:var(--text-muted);margin-top:4px">今日工具使用</div>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header">
-          <h3>📄 最近访问记录</h3>
-          <span style="font-size:.75rem;color:var(--text-muted)">最新100条</span>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>时间</th><th>类型</th><th>内容</th><th>设备</th></tr></thead>
-            <tbody id="realVisitBody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">加载中...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== CONTENT EDIT ===== -->
-    <div class="page" id="page-content">
-      <div class="two-col">
-        <div class="card">
-          <h3>📋 选择工具</h3>
-          <div class="search-box" style="margin-bottom:12px;max-width:100%">
-            <span class="s-icon">🔍</span>
-            <input type="text" placeholder="搜索工具..." id="contentSearchInput" oninput="filterContentList()" style="padding-left:36px;width:100%">
-          </div>
-          <div id="contentToolList" style="max-height:600px;overflow-y:auto"></div>
-        </div>
-        <div class="card">
-          <h3>📝 Prompt 编辑</h3>
-          <div id="contentEditArea" style="display:none">
-            <div class="form-group">
-              <label>工具名称</label>
-              <input type="text" id="editToolName" readonly style="opacity:.7">
-            </div>
-            <div class="form-group">
-              <label>工具描述</label>
-              <input type="text" id="editToolDesc">
-            </div>
-            <div class="form-group">
-              <label>使用场景</label>
-              <input type="text" id="editToolScene">
-            </div>
-            <div class="form-group">
-              <label>Prompt 提示词模板</label>
-              <textarea id="editToolPrompt" style="min-height:300px"></textarea>
-            </div>
-            <button class="btn btn-primary" onclick="saveContent()">💾 保存修改</button>
-          </div>
-          <div id="contentEmpty" style="text-align:center;padding:40px;color:var(--text-muted)">
-            <p style="font-size:3rem;margin-bottom:12px">📝</p>
-            <p>请从左侧选择一个工具进行编辑</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== STATS ===== -->
-    <div class="page" id="page-stats">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-        <div class="card">
-          <div class="card-header"><h3>📊 各模块使用占比</h3></div>
-          <div class="bar-chart" id="moduleBarChart"></div>
-        </div>
-        <div class="card">
-          <div class="card-header"><h3>📈 每日活跃用户</h3></div>
-          <div class="trend-chart" id="dauChart"></div>
-          <div class="trend-labels" id="dauLabels"></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header"><h3>📋 各模块详细数据</h3></div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>模块</th><th>工具数</th><th>总使用次数</th><th>平均评分</th><th>占比</th></tr></thead>
-            <tbody id="moduleStatsBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== SETTINGS ===== -->
-    <div class="page" id="page-settings">
-      <div class="card">
-        <h3>🌐 网站基本信息</h3>
-        <div class="form-group">
-          <label>网站名称</label>
-          <input type="text" value="TrainerAI 培训师AI工具仓" id="siteName">
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>网站描述</label>
-            <input type="text" value="基于MAP模型的AI培训工具集合" id="siteDesc">
-          </div>
-          <div class="form-group">
-            <label>联系邮箱</label>
-            <input type="text" value="admin@trainerai.com" id="siteEmail">
-          </div>
-        </div>
-        <button class="btn btn-primary" onclick="showToast('✅ 基本信息已保存')">💾 保存基本信息</button>
-      </div>
-
-      <div class="card">
-        <h3>🔧 功能开关</h3>
-        <div class="setting-item">
-          <div><div class="si-label">用户注册</div><div class="si-desc">允许新用户注册账号</div></div>
-          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
-        </div>
-        <div class="setting-item">
-          <div><div class="si-label">工具使用统计</div><div class="si-desc">记录每个工具的使用次数</div></div>
-          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
-        </div>
-        <div class="setting-item">
-          <div><div class="si-label">用户反馈收集</div><div class="si-desc">允许用户提交工具使用反馈</div></div>
-          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
-        </div>
-        <div class="setting-item">
-          <div><div class="si-label">邮件通知</div><div class="si-desc">新用户注册时发送邮件通知</div></div>
-          <div class="toggle" onclick="this.classList.toggle('on')"></div>
-        </div>
-        <div class="setting-item">
-          <div><div class="si-label">维护模式</div><div class="si-desc">开启后用户端显示维护页面</div></div>
-          <div class="toggle" onclick="this.classList.toggle('on')"></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>💾 数据管理</h3>
-        <div style="display:flex;gap:12px;flex-wrap:wrap">
-          <button class="btn btn-primary" onclick="showToast('📊 数据导出中...')">📥 导出用户数据 (CSV)</button>
-          <button class="btn btn-outline" onclick="showToast('📊 工具数据导出中...')">📥 导出工具数据 (JSON)</button>
-          <button class="btn btn-outline" onclick="showToast('📊 使用统计导出中...')">📥 导出使用统计 (PDF)</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>⚠️ 危险操作</h3>
-        <div style="display:flex;gap:12px;flex-wrap:wrap">
-          <button class="btn btn-danger" onclick="if(confirm('确定要清除所有缓存数据吗？'))showToast('🗑️ 缓存已清除')">🗑️ 清除缓存</button>
-          <button class="btn btn-danger" onclick="if(confirm('确定要重置所有工具数据吗？此操作不可恢复！'))showToast('🔄 数据已重置')">🔄 重置所有数据</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</main>
-</div>
-
-<!-- TOOL ADD/EDIT MODAL -->
-<div class="modal-overlay" id="toolModal" onclick="if(event.target===this)closeToolModal()">
-  <div class="modal">
-    <div class="modal-close" onclick="closeToolModal()">✕</div>
-    <h2 id="toolModalTitle">新增工具</h2>
-    <div class="form-group">
-      <label>工具名称</label>
-      <input type="text" id="modalToolName" placeholder="如：智能访谈助手">
-    </div>
-    <div class="form-group">
-      <label>所属模块</label>
-      <select id="modalToolModule">
-        <option value="analysis">🔍 需求分析</option>
-        <option value="design">📐 课程设计</option>
-        <option value="development">🛠️ 资料制作</option>
-        <option value="implementation">🎮 互动体验</option>
-        <option value="evaluation">📊 培训评估</option>
-        <option value="promotion">📢 课程宣发</option>
-        <option value="innovation">✨ 创新场景</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>图标 Emoji</label>
-      <input type="text" id="modalToolIcon" placeholder="如：🎤" style="width:80px">
-    </div>
-    <div class="form-group">
-      <label>工具描述</label>
-      <input type="text" id="modalToolDesc" placeholder="简短描述工具功能">
-    </div>
-    <div class="form-group">
-      <label>使用场景</label>
-      <input type="text" id="modalToolScene" placeholder="如：需求调研阶段">
-    </div>
-    <div class="form-group">
-      <label>Prompt 提示词</label>
-      <textarea id="modalToolPrompt" placeholder="输入专业的Prompt模板..." style="min-height:200px"></textarea>
-    </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" onclick="saveNewTool()">💾 保存</button>
-      <button class="btn btn-outline" onclick="closeToolModal()">取消</button>
-    </div>
+<div class="header">
+  <div class="header-brand">🤖 TrainerAI 管理后台</div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span id="lastUpdate" class="header-status">正在加载...</span>
+    <button class="refresh-btn" onclick="loadData()">🔄 刷新</button>
+    <button class="back-btn" onclick="window.open('index.html','_blank')">← 用户端</button>
   </div>
 </div>
 
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
+<div class="container">
+
+  <!-- TAB 导航 -->
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchTab('overview',this)">📊 数据概览</button>
+    <button class="tab" onclick="switchTab('tools',this)">🔧 工具统计</button>
+    <button class="tab" onclick="switchTab('records',this)">📋 使用记录</button>
+    <button class="tab" onclick="switchTab('modules',this)">📈 模块分析</button>
+  </div>
+
+  <!-- 数据概览 -->
+  <div class="tab-panel active" id="panel-overview">
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="kpi-card"><div class="kpi-label">工具使用总次数</div><div class="kpi-value" id="k-total">-</div><div class="kpi-sub">累计</div></div>
+      <div class="kpi-card"><div class="kpi-label">今日使用次数</div><div class="kpi-value" id="k-today">-</div><div class="kpi-sub">今天</div></div>
+      <div class="kpi-card"><div class="kpi-label">已使用工具数</div><div class="kpi-value" id="k-tools">-</div><div class="kpi-sub">种工具被使用过</div></div>
+      <div class="kpi-card"><div class="kpi-label">最活跃模块</div><div class="kpi-value" id="k-module" style="font-size:1.1rem;padding-top:6px">-</div><div class="kpi-sub">使用最多</div></div>
+    </div>
+
+    <div class="grid2" style="margin-top:14px">
+      <div class="card">
+        <div class="card-title">🔥 热门工具 Top 8</div>
+        <div id="hotList"><div class="loading">加载中...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🕐 最新使用记录</div>
+        <div id="recentList"><div class="loading">加载中...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 工具统计 -->
+  <div class="tab-panel" id="panel-tools">
+    <div class="card">
+      <div class="card-title">🛠️ 所有工具使用次数</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>工具名称</th><th>所属模块</th><th>使用次数</th><th>最近使用</th></tr></thead>
+          <tbody id="toolsTable"><tr><td colspan="5" class="loading">加载中...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 使用记录 -->
+  <div class="tab-panel" id="panel-records">
+    <div class="card">
+      <div class="card-title">📋 全部使用记录（最新100条）</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>时间</th><th>工具名称</th><th>模块</th><th>设备</th></tr></thead>
+          <tbody id="recordsTable"><tr><td colspan="4" class="loading">加载中...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模块分析 -->
+  <div class="tab-panel" id="panel-modules">
+    <div class="card">
+      <div class="card-title">📈 各模块使用分布</div>
+      <div class="module-bar-wrap" id="moduleChart"><div class="loading">加载中...</div></div>
+    </div>
+  </div>
+
+</div>
 
 <script>
-// Mock data
-const moduleNames = {
-  analysis:'🔍 需求分析',design:'📐 课程设计',development:'🛠️ 资料制作',
-  implementation:'🎮 互动体验',evaluation:'📊 培训评估',promotion:'📢 课程宣发',
-  innovation:'✨ 创新场景'
-};
-
-const toolsList = [
-  {name:'智能访谈助手',module:'analysis',icon:'🎤',desc:'AI生成结构化访谈问题',uses:156,active:true},
-  {name:'问卷智能设计器',module:'analysis',icon:'📝',desc:'AI生成专业调研问卷',uses:342,active:true},
-  {name:'培训需求分析报告生成器',module:'analysis',icon:'📊',desc:'AI自动生成需求分析报告',uses:89,active:true},
-  {name:'绩效差距诊断工具',module:'analysis',icon:'🎯',desc:'AI识别关键绩效差距',uses:67,active:true},
-  {name:'学员画像构建器',module:'analysis',icon:'👤',desc:'AI生成多维度学员画像',uses:98,active:true},
-  {name:'竞标提案AI助手',module:'analysis',icon:'💼',desc:'快速生成培训方案提案',uses:45,active:true},
-  {name:'教学目标智能生成器',module:'design',icon:'🎯',desc:'按布鲁姆6层次生成目标',uses:165,active:true},
-  {name:'课程大纲设计师',module:'design',icon:'📋',desc:'AI生成课程大纲',uses:123,active:true},
-  {name:'知识图谱构建器',module:'design',icon:'🔗',desc:'AI生成知识结构图',uses:78,active:true},
-  {name:'教学策略推荐器',module:'design',icon:'💡',desc:'推荐最优教学策略',uses:56,active:true},
-  {name:'案例库智能搜索',module:'design',icon:'📚',desc:'AI匹配教学案例',uses:91,active:true},
-  {name:'课程时间规划器',module:'design',icon:'⏰',desc:'AI分配模块时间',uses:87,active:true},
-  {name:'PPT大纲转内容框架',module:'development',icon:'📑',desc:'AI生成PPT内容框架',uses:278,active:true},
-  {name:'培训师手册生成器',module:'development',icon:'📖',desc:'AI生成指导手册',uses:134,active:true},
-  {name:'学员手册制作器',module:'development',icon:'📒',desc:'AI生成学员手册',uses:112,active:true},
-  {name:'课程视频脚本生成器',module:'development',icon:'🎬',desc:'AI生成视频脚本',uses:98,active:true},
-  {name:'测试题库智能生成',module:'development',icon:'📝',desc:'AI批量生成试题',uses:156,active:true},
-  {name:'微课内容设计师',module:'development',icon:'🎓',desc:'AI设计微课内容',uses:87,active:true},
-  {name:'课堂活动设计器',module:'implementation',icon:'🎪',desc:'AI设计互动活动',uses:123,active:true},
-  {name:'破冰暖场游戏库',module:'implementation',icon:'🧊',desc:'AI推荐破冰游戏',uses:145,active:true},
-  {name:'案例研讨题设计',module:'implementation',icon:'💬',desc:'AI生成案例研讨题',uses:89,active:true},
-  {name:'AI模拟对话练习',module:'implementation',icon:'🤖',desc:'生成角色扮演脚本',uses:76,active:true},
-  {name:'实时互动问题生成器',module:'implementation',icon:'❓',desc:'课中生成互动问题',uses:134,active:true},
-  {name:'情景模拟设计师',module:'implementation',icon:'🎭',desc:'设计沉浸式模拟练习',uses:67,active:true},
-  {name:'柯氏四级评估方案设计',module:'evaluation',icon:'📈',desc:'AI生成四级评估方案',uses:134,active:true},
-  {name:'反应评估问卷生成器',module:'evaluation',icon:'📋',desc:'AI生成满意度问卷',uses:112,active:true},
-  {name:'知识检测题库',module:'evaluation',icon:'✅',desc:'AI生成前后测题库',uses:98,active:true},
-  {name:'行为改变追踪方案',module:'evaluation',icon:'🔄',desc:'AI设计行为跟踪计划',uses:56,active:true},
-  {name:'培训ROI计算器',module:'evaluation',icon:'💰',desc:'AI计算培训ROI',uses:87,active:true},
-  {name:'评估数据可视化报告',module:'evaluation',icon:'📉',desc:'AI生成图表报告',uses:76,active:true},
-  {name:'课程简介文案生成器',module:'promotion',icon:'✍️',desc:'AI生成课程推广文案',uses:196,active:true},
-  {name:'朋友圈公众号推文',module:'promotion',icon:'📱',desc:'AI生成社交媒体内容',uses:178,active:true},
-  {name:'海报文案设计',module:'promotion',icon:'🎨',desc:'AI生成海报文案',uses:134,active:true},
-  {name:'课程宣传视频脚本',module:'promotion',icon:'🎥',desc:'AI生成视频脚本',uses:89,active:true},
-  {name:'学员招募通知模板',module:'promotion',icon:'📧',desc:'AI生成招募通知',uses:67,active:true},
-  {name:'培训成果报告模板',module:'promotion',icon:'📑',desc:'AI生成成果报告大纲',uses:56,active:true},
-  {name:'培训师AI分身',module:'innovation',icon:'🤖',desc:'训练个人AI助手',uses:234,active:true},
-  {name:'学习路径智能规划',module:'innovation',icon:'🗺️',desc:'AI生成个性化学习路径',uses:189,active:true},
-  {name:'课程效果预测器',module:'innovation',icon:'🔮',desc:'AI预测课程效果',uses:145,active:true},
-  {name:'多语言培训适配',module:'innovation',icon:'🌐',desc:'AI翻译并文化适配',uses:98,active:true},
-  {name:'无障碍内容转化',module:'innovation',icon:'♿',desc:'AI转为无障碍格式',uses:67,active:true},
-  {name:'培训趋势雷达',module:'innovation',icon:'📡',desc:'AI追踪培训趋势',uses:123,active:true}
-];
-
-const usersList = [
-  {name:'张教练',initial:'张',reg:'2025-01-15',uses:156,last:'2025-03-20',status:'active'},
-  {name:'李老师',initial:'李',reg:'2025-02-03',uses:134,last:'2025-03-19',status:'active'},
-  {name:'王培训',initial:'王',reg:'2025-02-18',uses:98,last:'2025-03-18',status:'active'},
-  {name:'陈经理',initial:'陈',reg:'2025-01-28',uses:87,last:'2025-03-17',status:'active'},
-  {name:'赵讲师',initial:'赵',reg:'2025-03-01',uses:76,last:'2025-03-16',status:'active'},
-  {name:'刘顾问',initial:'刘',reg:'2025-01-10',uses:234,last:'2025-03-20',status:'active'},
-  {name:'周总监',initial:'周',reg:'2025-02-25',uses:45,last:'2025-03-10',status:'inactive'},
-  {name:'吴主管',initial:'吴',reg:'2025-03-05',uses:23,last:'2025-03-15',status:'active'},
-  {name:'孙HR',initial:'孙',reg:'2025-01-20',uses:167,last:'2025-03-19',status:'active'},
-  {name:'郑开发',initial:'郑',reg:'2025-03-12',uses:12,last:'2025-03-14',status:'pending'}
-];
-
-// Page switching
-const pageTitles = {
-  dashboard:'📊 数据概览',tools:'🛠️ 工具管理',users:'👥 用户管理',
-  content:'📝 内容编辑',stats:'📈 使用统计',settings:'⚙️ 系统设置'
-};
-
-function switchPage(page, el) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
-  document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-  if (el) el.classList.add('active');
-  document.getElementById('pageTitle').textContent = pageTitles[page] || '';
-  // Close sidebar on mobile
-  document.getElementById('sidebar').classList.remove('open');
-}
-
-// Toast
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
-}
-
-// Render tools table
-function renderToolsTable(data) {
-  const tbody = document.getElementById('toolsTableBody');
-  let html = '';
-  data.forEach((t, i) => {
-    html += `<tr data-module="${t.module}" data-name="${t.name}">
-      <td>${t.icon} ${t.name}</td>
-      <td>${moduleNames[t.module]}</td>
-      <td><div class="toggle ${t.active?'on':''}" onclick="toggleTool(${i},this)"></div></td>
-      <td>${t.uses.toLocaleString()}</td>
-      <td><div class="btn-group">
-        <button class="btn btn-outline btn-sm" onclick="editTool(${i})">编辑</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteTool(${i})">删除</button>
-      </div></td>
-    </tr>`;
-  });
-  tbody.innerHTML = html;
-}
-
-function filterToolTable() {
-  const mod = document.getElementById('toolModuleFilter').value;
-  const q = document.getElementById('toolSearchInput').value.toLowerCase();
-  const filtered = toolsList.filter(t => {
-    const matchMod = mod === 'all' || t.module === mod;
-    const matchQ = !q || t.name.toLowerCase().includes(q);
-    return matchMod && matchQ;
-  });
-  renderToolsTable(filtered);
-}
-
-function toggleTool(i, el) {
-  el.classList.toggle('on');
-  toolsList[i].active = el.classList.contains('on');
-  showToast(toolsList[i].active ? '✅ 工具已启用' : '⏸️ 工具已禁用');
-}
-
-function editTool(i) {
-  const t = toolsList[i];
-  document.getElementById('toolModalTitle').textContent = '编辑工具';
-  document.getElementById('modalToolName').value = t.name;
-  document.getElementById('modalToolModule').value = t.module;
-  document.getElementById('modalToolIcon').value = t.icon;
-  document.getElementById('modalToolDesc').value = t.desc;
-  document.getElementById('modalToolScene').value = '';
-  document.getElementById('modalToolPrompt').value = '';
-  document.getElementById('toolModal').classList.add('active');
-}
-
-function deleteTool(i) {
-  if (confirm('确定要删除工具「' + toolsList[i].name + '」吗？')) {
-    toolsList.splice(i, 1);
-    renderToolsTable(toolsList);
-    showToast('🗑️ 工具已删除');
-  }
-}
-
-function openToolModal() {
-  document.getElementById('toolModalTitle').textContent = '新增工具';
-  document.getElementById('modalToolName').value = '';
-  document.getElementById('modalToolModule').value = 'analysis';
-  document.getElementById('modalToolIcon').value = '';
-  document.getElementById('modalToolDesc').value = '';
-  document.getElementById('modalToolScene').value = '';
-  document.getElementById('modalToolPrompt').value = '';
-  document.getElementById('toolModal').classList.add('active');
-}
-
-function closeToolModal() {
-  document.getElementById('toolModal').classList.remove('active');
-}
-
-function saveNewTool() {
-  const name = document.getElementById('modalToolName').value.trim();
-  if (!name) { showToast('⚠️ 请输入工具名称'); return; }
-  toolsList.push({
-    name: name,
-    module: document.getElementById('modalToolModule').value,
-    icon: document.getElementById('modalToolIcon').value || '🔧',
-    desc: document.getElementById('modalToolDesc').value,
-    uses: 0,
-    active: true
-  });
-  closeToolModal();
-  renderToolsTable(toolsList);
-  showToast('✅ 工具已添加');
-}
-
-// Render users table
-function renderUsersTable(data) {
-  const tbody = document.getElementById('usersTableBody');
-  let html = '';
-  data.forEach(u => {
-    const statusClass = u.status === 'active' ? 'status-active' : u.status === 'inactive' ? 'status-inactive' : 'status-pending';
-    const statusText = u.status === 'active' ? '正常' : u.status === 'inactive' ? '停用' : '待审核';
-    html += `<tr>
-      <td><div class="user-cell"><div class="user-avatar">${u.initial}</div><div><div class="uname">${u.name}</div></div></div></td>
-      <td>${u.reg}</td>
-      <td>${u.uses}</td>
-      <td>${u.last}</td>
-      <td><span class="status ${statusClass}">${statusText}</span></td>
-      <td><div class="btn-group">
-        <button class="btn btn-outline btn-sm" onclick="showToast('👤 编辑用户: ${u.name}')">编辑</button>
-        <button class="btn btn-danger btn-sm" onclick="showToast('🗑️ 用户已处理')">删除</button>
-      </div></td>
-    </tr>`;
-  });
-  tbody.innerHTML = html;
-}
-
-function filterUserTable() {
-  const q = document.getElementById('userSearchInput').value.toLowerCase();
-  const filtered = usersList.filter(u => u.name.toLowerCase().includes(q) || u.initial.includes(q));
-  renderUsersTable(filtered);
-}
-
-// Content edit
-function renderContentList(data) {
-  const list = document.getElementById('contentToolList');
-  let html = '';
-  data.forEach((t, i) => {
-    html += `<div class="tool-list-item" onclick="selectContentTool(${i})" data-name="${t.name}">
-      <div class="tli-name">${t.icon} ${t.name}</div>
-      <div class="tli-mod">${moduleNames[t.module]}</div>
-    </div>`;
-  });
-  list.innerHTML = html;
-}
-
-function filterContentList() {
-  const q = document.getElementById('contentSearchInput').value.toLowerCase();
-  const filtered = toolsList.filter(t => t.name.toLowerCase().includes(q));
-  renderContentList(filtered);
-}
-
-function selectContentTool(i) {
-  const t = toolsList[i];
-  document.getElementById('contentToolList').querySelectorAll('.tool-list-item').forEach(el => el.classList.remove('selected'));
-  document.getElementById('contentToolList').querySelectorAll('.tool-list-item')[i] && 
-    document.getElementById('contentToolList').querySelectorAll('.tool-list-item').forEach((el, idx) => {
-      if (idx === i || el.querySelector('.tli-name').textContent.includes(t.name)) el.classList.add('selected');
-    });
-  document.getElementById('contentEmpty').style.display = 'none';
-  document.getElementById('contentEditArea').style.display = 'block';
-  document.getElementById('editToolName').value = t.name;
-  document.getElementById('editToolDesc').value = t.desc;
-  document.getElementById('editToolScene').value = '';
-  document.getElementById('editToolPrompt').value = `[请在此编辑 ${t.name} 的 Prompt 提示词模板]\n\n示例格式：\n你是一位培训专家，请根据以下信息生成...\n\n培训主题：[填写]\n目标学员：[描述]\n\n要求：\n1. ...\n2. ...\n3. ...`;
-}
-
-function saveContent() {
-  showToast('✅ 内容已保存');
-}
-
-// Charts
-function renderTrendChart() {
-  const days = ['周一','周二','周三','周四','周五','周六','周日'];
-  const values = [980,1120,1050,1280,1350,890,1284];
-  const max = Math.max(...values);
-  
-  const chart = document.getElementById('trendChart');
-  const labels = document.getElementById('trendLabels');
-  let chartHtml = '';
-  let labelsHtml = '';
-  
-  values.forEach((v, i) => {
-    const h = (v / max * 140);
-    chartHtml += `<div class="trend-bar" style="height:${h}px" title="${days[i]}: ${v}次"></div>`;
-    labelsHtml += `<span>${days[i]}</span>`;
-  });
-  
-  chart.innerHTML = chartHtml;
-  labels.innerHTML = labelsHtml;
-}
-
-function renderModuleBarChart() {
-  const chart = document.getElementById('moduleBarChart');
-  const mods = [
-    {name:'需求分析',value:797,color:'#6366f1'},
-    {name:'课程设计',value:600,color:'#8b5cf6'},
-    {name:'资料制作',value:865,color:'#a78bfa'},
-    {name:'互动体验',value:634,color:'#c4b5fd'},
-    {name:'培训评估',value:563,color:'#7c3aed'},
-    {name:'课程宣发',value:720,color:'#5b21b6'},
-    {name:'创新场景',value:856,color:'#4c1d95'}
-  ];
-  const max = Math.max(...mods.map(m=>m.value));
-  
-  let html = '';
-  mods.forEach(m => {
-    const h = (m.value / max * 160);
-    html += `<div class="bar-item">
-      <div class="bar-value">${m.value}</div>
-      <div class="bar" style="height:${h}px;background:${m.color}"></div>
-      <div class="bar-label">${m.name}</div>
-    </div>`;
-  });
-  chart.innerHTML = html;
-}
-
-function renderDAUChart() {
-  const chart = document.getElementById('dauChart');
-  const labels = document.getElementById('dauLabels');
-  const days = ['5/15','5/16','5/17','5/18','5/19','5/20','5/21'];
-  const values = [245,268,312,289,334,356,378];
-  const max = Math.max(...values);
-  
-  let chartHtml = '';
-  let labelsHtml = '';
-  values.forEach((v, i) => {
-    const h = (v / max * 140);
-    chartHtml += `<div class="trend-bar" style="height:${h}px" title="${days[i]}: ${v}人"></div>`;
-    labelsHtml += `<span>${days[i]}</span>`;
-  });
-  chart.innerHTML = chartHtml;
-  labels.innerHTML = labelsHtml;
-}
-
-function renderModuleStats() {
-  const tbody = document.getElementById('moduleStatsBody');
-  const data = [
-    {mod:'🔍 需求分析',count:6,uses:797,rating:4.7,pct:'23.1%'},
-    {mod:'📐 课程设计',count:6,uses:600,rating:4.6,pct:'17.4%'},
-    {mod:'🛠️ 资料制作',count:6,uses:865,rating:4.8,pct:'25.1%'},
-    {mod:'🎮 互动体验',count:6,uses:634,rating:4.5,pct:'18.4%'},
-    {mod:'📊 培训评估',count:6,uses:563,rating:4.7,pct:'16.3%'},
-    {mod:'📢 课程宣发',count:6,uses:720,rating:4.6,pct:'20.9%'},
-    {mod:'✨ 创新场景',count:6,uses:856,rating:4.9,pct:'24.8%'}
-  ];
-  let html = '';
-  data.forEach(d => {
-    html += `<tr><td>${d.mod}</td><td>${d.count}</td><td>${d.uses.toLocaleString()}</td><td>⭐ ${d.rating}</td><td>${d.pct}</td></tr>`;
-  });
-  tbody.innerHTML = html;
-}
-
-// ========== Supabase 真实数据 ==========
 const SUPABASE_URL = 'https://omcxlxcamweynlgfvcqy.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_XYLqYjkf-c3baMDdZ3yCgQ_37OCkSed';
-const _v = Date.now(); // 缓存破坏版本号
 
-async function sbFetch(path, params='') {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}${params}`, {
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
-      }
-    });
-    if (!res.ok) {
-      console.warn('sbFetch error', path, res.status, await res.text());
-      return null;
-    }
-    return await res.json();
-  } catch(e) { console.error('sbFetch exception', e); return null; }
+const MODULE_NAME = {
+  analysis:'🔍 需求分析', design:'📐 课程设计', development:'🛠️ 资料制作',
+  implementation:'🎮 互动体验', evaluation:'📊 培训评估', promotion:'📢 课程宣发', innovation:'✨ 创新场景'
+};
+
+function timeAgo(iso) {
+  const d = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (d < 60) return '刚刚';
+  if (d < 3600) return Math.floor(d/60) + '分钟前';
+  if (d < 86400) return Math.floor(d/3600) + '小时前';
+  return Math.floor(d/86400) + '天前';
+}
+function fmtTime(iso) {
+  const t = new Date(iso);
+  return `${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+}
+function devIcon(ua='') {
+  if (/iPhone|Android/.test(ua)) return '📱 手机';
+  if (/iPad/.test(ua)) return '📱 平板';
+  return '💻 电脑';
 }
 
-async function loadRealStats() {
-  const moduleEmoji = {analysis:'🔍',design:'📐',development:'🛠️',implementation:'🎮',evaluation:'📊',promotion:'📢',innovation:'✨'};
-
-  // 一次性拉取全部数据，前端自己计算，避免复杂查询参数导致 CORS 问题
-  let allEvents = [];
+async function loadData() {
+  document.getElementById('lastUpdate').textContent = '加载中...';
   try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/tool_events?select=tool_name,module_id,created_at,user_agent&order=created_at.desc&limit=1000`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    });
-    if (r.ok) allEvents = await r.json();
-  } catch(e) { console.error('fetch tool_events failed', e); }
-
-  // 今日起始时间（本地时间转UTC）
-  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
-  const todayEvents = allEvents.filter(x => new Date(x.created_at) >= todayStart);
-
-  // === KPI ===
-  const elUses = document.getElementById('kpi-uses');
-  const elToday = document.getElementById('kpi-today');
-  const elViews = document.getElementById('kpi-views');
-  if (elUses) elUses.textContent = allEvents.length.toLocaleString();
-  if (elToday) elToday.textContent = todayEvents.length.toLocaleString();
-  if (elViews) elViews.textContent = allEvents.length.toLocaleString(); // 用工具使用数代替
-
-  // === 热门工具 Top5 ===
-  const container = document.getElementById('hotToolsList');
-  if (container) {
-    if (allEvents.length > 0) {
-      const counts = {};
-      allEvents.forEach(x => { counts[x.tool_name] = (counts[x.tool_name]||0) + 1; });
-      const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
-      container.innerHTML = sorted.map(([name,cnt],i) =>
-        `<div class="hot-item"><span class="hot-rank">${i+1}</span><span class="hot-name">${name}</span><span class="hot-count">${cnt}次</span></div>`
-      ).join('');
-    } else {
-      container.innerHTML = '<div style="color:var(--text-muted);padding:12px;font-size:.85rem">暂无数据，用户使用工具后将自动显示</div>';
-    }
-  }
-
-  // === 最新使用记录 ===
-  const recentEl = document.getElementById('recentFeedback');
-  if (recentEl) {
-    if (allEvents.length > 0) {
-      recentEl.innerHTML = allEvents.slice(0,8).map(x => {
-        const t = new Date(x.created_at), now = new Date();
-        const dm = Math.floor((now-t)/60000);
-        const ts = dm<1?'刚刚':dm<60?dm+'分钟前':dm<1440?Math.floor(dm/60)+'小时前':Math.floor(dm/1440)+'天前';
-        const em = moduleEmoji[x.module_id]||'🔧';
-        return `<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-          <div><span style="font-size:.85rem">${em} <strong>${x.tool_name}</strong></span><br><span style="font-size:.75rem;color:var(--text-muted)">被使用</span></div>
-          <span style="font-size:.75rem;color:var(--text-muted);white-space:nowrap">${ts}</span>
-        </div>`;
-      }).join('');
-    } else {
-      recentEl.innerHTML = '<div style="color:var(--text-muted);font-size:.85rem;padding:20px;text-align:center">暂无使用记录，用户使用工具后将自动记录</div>';
-    }
-  }
-
-  // === 用户管理页访问记录 ===
-  const tbody = document.getElementById('realVisitBody');
-  if (tbody) {
-    if (allEvents.length > 0) {
-      tbody.innerHTML = allEvents.slice(0,100).map(x => {
-        const t = new Date(x.created_at);
-        const ts = `${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
-        const ua = x.user_agent||'';
-        const dev = /iPhone|Android/.test(ua)?'📱 手机':/iPad/.test(ua)?'📱 平板':'💻 电脑';
-        return `<tr><td style="white-space:nowrap;color:var(--text-muted);font-size:.8rem">${ts}</td><td>🛠️ 工具使用</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.tool_name}</td><td>${dev}</td></tr>`;
-      }).join('');
-    } else {
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:30px">暂无访问记录</td></tr>';
-    }
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/tool_events?select=tool_name,module_id,created_at,user_agent&order=created_at.desc&limit=1000`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+    );
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    render(data);
+    document.getElementById('lastUpdate').innerHTML = `上次更新 <span>${new Date().toLocaleTimeString('zh-CN')}</span>`;
+  } catch(e) {
+    document.getElementById('lastUpdate').textContent = '加载失败: ' + e.message;
+    console.error(e);
   }
 }
 
-// Init
-renderToolsTable(toolsList);
-renderUsersTable(usersList);
-renderContentList(toolsList);
-renderTrendChart();
-renderModuleBarChart();
-renderDAUChart();
-renderModuleStats();
-// 加载真实数据
-loadRealStats();
-// 每30秒刷新一次
-setInterval(loadRealStats, 30000);
+function render(data) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayData = data.filter(x => new Date(x.created_at) >= today);
+
+  // KPI
+  const toolSet = new Set(data.map(x=>x.tool_name));
+  const moduleCounts = {};
+  data.forEach(x => { moduleCounts[x.module_id] = (moduleCounts[x.module_id]||0)+1; });
+  const topModule = Object.entries(moduleCounts).sort((a,b)=>b[1]-a[1])[0];
+
+  document.getElementById('k-total').textContent = data.length;
+  document.getElementById('k-today').textContent = todayData.length;
+  document.getElementById('k-tools').textContent = toolSet.size;
+  document.getElementById('k-module').textContent = topModule ? (MODULE_NAME[topModule[0]]||topModule[0]) : '-';
+
+  // 热门工具
+  const toolCounts = {};
+  data.forEach(x => { toolCounts[x.tool_name] = (toolCounts[x.tool_name]||0)+1; });
+  const sortedTools = Object.entries(toolCounts).sort((a,b)=>b[1]-a[1]);
+  const hotEl = document.getElementById('hotList');
+  if (sortedTools.length === 0) {
+    hotEl.innerHTML = '<div class="empty">暂无数据</div>';
+  } else {
+    hotEl.innerHTML = sortedTools.slice(0,8).map(([name,cnt],i) =>
+      `<div class="hot-item">
+        <span class="hot-rank">${i+1}</span>
+        <span class="hot-name">${name}</span>
+        <span class="hot-count">${cnt}次</span>
+      </div>`
+    ).join('');
+  }
+
+  // 最新记录
+  const recentEl = document.getElementById('recentList');
+  if (data.length === 0) {
+    recentEl.innerHTML = '<div class="empty">暂无记录</div>';
+  } else {
+    recentEl.innerHTML = data.slice(0,8).map(x =>
+      `<div class="recent-item">
+        <div>
+          <div class="recent-tool">${x.tool_name}</div>
+          <div class="recent-module">${MODULE_NAME[x.module_id]||x.module_id||'未知'}</div>
+        </div>
+        <div class="recent-time">${timeAgo(x.created_at)}</div>
+      </div>`
+    ).join('');
+  }
+
+  // 工具统计表格
+  const tbody = document.getElementById('toolsTable');
+  if (sortedTools.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty">暂无数据</td></tr>';
+  } else {
+    // 找每个工具最近使用时间和模块
+    const toolMeta = {};
+    data.forEach(x => {
+      if (!toolMeta[x.tool_name]) toolMeta[x.tool_name] = { module: x.module_id, last: x.created_at };
+    });
+    tbody.innerHTML = sortedTools.map(([name,cnt],i) => {
+      const meta = toolMeta[name]||{};
+      const mod = MODULE_NAME[meta.module]||meta.module||'-';
+      return `<tr>
+        <td style="color:#64748b">${i+1}</td>
+        <td><strong>${name}</strong></td>
+        <td><span class="badge badge-purple">${mod}</span></td>
+        <td><strong style="color:#6366f1">${cnt}</strong></td>
+        <td style="color:#94a3b8;font-size:.78rem">${meta.last?fmtTime(meta.last):'-'}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // 使用记录表格
+  const rtbody = document.getElementById('recordsTable');
+  if (data.length === 0) {
+    rtbody.innerHTML = '<tr><td colspan="4" class="empty">暂无记录</td></tr>';
+  } else {
+    rtbody.innerHTML = data.slice(0,100).map(x =>
+      `<tr>
+        <td style="white-space:nowrap;color:#94a3b8;font-size:.78rem">${fmtTime(x.created_at)}</td>
+        <td><strong>${x.tool_name}</strong></td>
+        <td><span class="badge badge-blue">${MODULE_NAME[x.module_id]||x.module_id||'-'}</span></td>
+        <td style="font-size:.8rem">${devIcon(x.user_agent)}</td>
+      </tr>`
+    ).join('');
+  }
+
+  // 模块柱状图
+  const maxVal = Math.max(...Object.values(moduleCounts), 1);
+  const moduleEl = document.getElementById('moduleChart');
+  const moduleOrder = ['analysis','design','development','implementation','evaluation','promotion','innovation'];
+  if (Object.keys(moduleCounts).length === 0) {
+    moduleEl.innerHTML = '<div class="empty">暂无数据</div>';
+  } else {
+    moduleEl.innerHTML = moduleOrder.map(key => {
+      const cnt = moduleCounts[key]||0;
+      const pct = Math.round(cnt/maxVal*100);
+      return `<div class="module-bar-row">
+        <div class="module-bar-label" title="${MODULE_NAME[key]||key}">${MODULE_NAME[key]||key}</div>
+        <div class="module-bar-track">
+          <div class="module-bar-fill" style="width:${pct}%">${cnt>0?cnt:''}</div>
+        </div>
+        <div class="module-bar-count">${cnt}</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// 加载数据
+loadData();
+// 每60秒自动刷新
+setInterval(loadData, 60000);
 </script>
 </body>
 </html>
