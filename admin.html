@@ -356,18 +356,35 @@ border-bottom:1px solid var(--border)}
 
     <!-- ===== USER MANAGEMENT ===== -->
     <div class="page" id="page-users">
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-header">
+          <h3>📊 访问概览</h3>
+          <span style="font-size:.75rem;color:var(--text-muted)">真实数据 · 30秒自动刷新</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:4px 0">
+          <div style="background:var(--bg);border-radius:8px;padding:14px;text-align:center">
+            <div style="font-size:1.6rem;font-weight:700;color:#6366f1" id="uv-page-total">-</div>
+            <div style="font-size:.8rem;color:var(--text-muted);margin-top:4px">总页面访问</div>
+          </div>
+          <div style="background:var(--bg);border-radius:8px;padding:14px;text-align:center">
+            <div style="font-size:1.6rem;font-weight:700;color:#10b981" id="uv-page-today">-</div>
+            <div style="font-size:.8rem;color:var(--text-muted);margin-top:4px">今日访问</div>
+          </div>
+          <div style="background:var(--bg);border-radius:8px;padding:14px;text-align:center">
+            <div style="font-size:1.6rem;font-weight:700;color:#f59e0b" id="uv-tool-today">-</div>
+            <div style="font-size:.8rem;color:var(--text-muted);margin-top:4px">今日工具使用</div>
+          </div>
+        </div>
+      </div>
       <div class="card">
         <div class="card-header">
-          <h3>👥 用户列表</h3>
-          <div class="search-box">
-            <span class="s-icon">🔍</span>
-            <input type="text" placeholder="搜索用户..." id="userSearchInput" oninput="filterUserTable()">
-          </div>
+          <h3>📄 最近访问记录</h3>
+          <span style="font-size:.75rem;color:var(--text-muted)">最新100条</span>
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>用户</th><th>注册时间</th><th>使用次数</th><th>最近活跃</th><th>状态</th><th>操作</th></tr></thead>
-            <tbody id="usersTableBody"></tbody>
+            <thead><tr><th>时间</th><th>类型</th><th>内容</th><th>设备</th></tr></thead>
+            <tbody id="realVisitBody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">加载中...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -924,7 +941,7 @@ async function loadRealStats() {
     }
   }
 
-  // 最近访问记录
+  // 最近访问记录（概览卖）
   const recentEvents = await sbFetch('tool_events', '?select=tool_name,created_at&order=created_at.desc&limit=5');
   if (recentEvents && recentEvents.length > 0) {
     const container = document.getElementById('recentFeedback');
@@ -935,6 +952,36 @@ async function loadRealStats() {
         return `<div class="feedback-item"><span>工具「${r.tool_name}」被使用</span><span class="feedback-time">${timeStr}</span></div>`;
       }).join('');
     }
+  }
+
+  // 用户管理页：访问概览
+  const todayStart2 = new Date(); todayStart2.setHours(0,0,0,0);
+  const pvTotal = await sbFetch('page_views', '?select=id');
+  const pvToday = await sbFetch('page_views', `?created_at=gte.${todayStart2.toISOString()}&select=id`);
+  const teToday = await sbFetch('tool_events', `?created_at=gte.${todayStart2.toISOString()}&select=id`);
+  if (pvTotal) document.getElementById('uv-page-total') && (document.getElementById('uv-page-total').textContent = pvTotal.length.toLocaleString());
+  if (pvToday) document.getElementById('uv-page-today') && (document.getElementById('uv-page-today').textContent = pvToday.length.toLocaleString());
+  if (teToday) document.getElementById('uv-tool-today') && (document.getElementById('uv-tool-today').textContent = teToday.length.toLocaleString());
+
+  // 用户管理页：访问记录列表（合并 page_views + tool_events 最近100条）
+  const pvRecent = await sbFetch('page_views', '?select=created_at,user_agent&order=created_at.desc&limit=50');
+  const teRecent = await sbFetch('tool_events', '?select=created_at,user_agent,tool_name&order=created_at.desc&limit=50');
+  const allRecords = [
+    ...(pvRecent||[]).map(r => ({time: r.created_at, type: '📖 页面访问', content: '主页', ua: r.user_agent})),
+    ...(teRecent||[]).map(r => ({time: r.created_at, type: '🛠️ 工具使用', content: r.tool_name, ua: r.user_agent}))
+  ].sort((a,b) => new Date(b.time) - new Date(a.time)).slice(0,100);
+
+  const tbody = document.getElementById('realVisitBody');
+  if (tbody && allRecords.length > 0) {
+    tbody.innerHTML = allRecords.map(r => {
+      const t = new Date(r.time);
+      const timeStr = `${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+      const ua = r.ua || '';
+      const device = ua.includes('iPhone')||ua.includes('Android') ? '📱 手机' : ua.includes('iPad') ? '📱 平板' : '💻 电脑';
+      return `<tr><td style="white-space:nowrap;color:var(--text-muted);font-size:.8rem">${timeStr}</td><td>${r.type}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.content}</td><td>${device}</td></tr>`;
+    }).join('');
+  } else if (tbody) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">暂无访问记录</td></tr>';
   }
 }
 
