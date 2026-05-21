@@ -18,6 +18,20 @@ background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 button{cursor:pointer;border:none;font-family:inherit}
 
+/* 左侧导航栏 */
+.sidenav{position:fixed;left:0;top:64px;bottom:0;width:220px;background:rgba(15,23,42,0.97);border-right:1px solid var(--border);overflow-y:auto;z-index:900;transform:translateX(-100%);transition:transform .3s;scrollbar-width:thin;scrollbar-color:#334155 transparent}
+.sidenav.open{transform:translateX(0)}
+.sidenav-inner{padding:12px 0 80px}
+.sidenav-module{padding:10px 16px 4px;font-size:.68rem;color:#64748b;text-transform:uppercase;letter-spacing:.08em;font-weight:700;display:flex;align-items:center;gap:6px}
+.sidenav-tool{display:block;padding:7px 16px 7px 28px;font-size:.8rem;color:#94a3b8;cursor:pointer;transition:.15s;border-left:2px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidenav-tool:hover{color:#e2e8f0;background:rgba(99,102,241,0.08);border-left-color:#6366f1}
+.sidenav-tool.active{color:#6366f1;border-left-color:#6366f1;font-weight:600}
+.sidenav-toggle{position:fixed;left:0;top:50%;transform:translateY(-50%);width:20px;height:60px;background:var(--accent);border-radius:0 8px 8px 0;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:901;transition:left .3s;font-size:.7rem;color:#fff;writing-mode:vertical-lr;letter-spacing:.1em}
+.sidenav-toggle.open{left:220px}
+.page-wrapper{transition:padding-left .3s}
+.page-wrapper.nav-open{padding-left:220px}
+@media(max-width:768px){.page-wrapper.nav-open{padding-left:0}.sidenav-toggle.open{left:220px}}
+
 /* NAV */
 .navbar{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(15,23,42,0.92);
 backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;
@@ -218,7 +232,14 @@ padding:6px 16px;border-radius:20px;font-size:.8rem;transition:all .2s}
   <button onclick="filterModule('innovation',this)">✨ 创新场景</button>
 </div>
 
+<!-- 左侧快捷导航 -->
+<div class="sidenav" id="sidenav">
+  <div class="sidenav-inner" id="sidenavInner"></div>
+</div>
+<div class="sidenav-toggle" id="sidenavToggle" onclick="toggleSidenav()">导航</div>
+
 <!-- MODULES CONTAINER -->
+<div class="page-wrapper" id="pageWrapper">
 <div id="modulesContainer"></div>
 
 <!-- INNOVATION SECTION -->
@@ -227,6 +248,7 @@ padding:6px 16px;border-radius:20px;font-size:.8rem;transition:all .2s}
   <p>前沿 AI 能力，重新定义培训的未来</p>
   <div class="innovation-grid" id="innovationGrid"></div>
 </div>
+</div><!-- /page-wrapper -->
 
 <!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
@@ -776,6 +798,69 @@ function logout() {
   localStorage.removeItem('sb_user');
   window.location.href = 'login.html';
 }
+
+// ========== 左侧快捷导航 ==========
+function buildSidenav() {
+  const inner = document.getElementById('sidenavInner');
+  if (!inner) return;
+  const moduleOrder = [
+    {key:'analysis', icon:'🔍', name:'需求分析'},
+    {key:'design', icon:'📐', name:'课程设计'},
+    {key:'development', icon:'🛠️', name:'资料制作'},
+    {key:'implementation', icon:'🎮', name:'互动体验'},
+    {key:'evaluation', icon:'📊', name:'培训评估'},
+    {key:'promotion', icon:'📢', name:'课程宣发'},
+    {key:'innovation', icon:'✨', name:'创新场景'},
+  ];
+  let html = '';
+  moduleOrder.forEach(m => {
+    const mod = modules.find(x => x.key === m.key);
+    const toolList = m.key === 'innovation' ? innovationModule.tools : (mod ? mod.tools : []);
+    html += `<div class="sidenav-module">${m.icon} ${m.name}</div>`;
+    toolList.forEach(tool => {
+      const tid = 'tool-' + (tool.name||'').replace(/[\s/]/g,'_');
+      html += `<div class="sidenav-tool" onclick="scrollToTool('${tid}')" title="${tool.name}">${tool.name}</div>`;
+    });
+  });
+  inner.innerHTML = html;
+}
+
+function scrollToTool(tid) {
+  // 找到对应卡片
+  let el = document.getElementById(tid);
+  if (!el) {
+    // 通过工具名称找
+    const name = tid.replace('tool-','').replace(/_/g,' ');
+    const cards = document.querySelectorAll('.tool-card, .innovation-card');
+    for (const c of cards) {
+      if ((c.querySelector('h3')||{}).textContent?.trim() === name) { el = c; break; }
+    }
+  }
+  if (el) {
+    el.scrollIntoView({behavior:'smooth', block:'center'});
+    el.style.boxShadow = '0 0 0 2px #6366f1, 0 8px 32px rgba(99,102,241,0.4)';
+    setTimeout(() => el.style.boxShadow = '', 1500);
+    // 更新活跃状态
+    document.querySelectorAll('.sidenav-tool').forEach(t => t.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+  }
+}
+
+let sidenavOpen = false;
+function toggleSidenav() {
+  sidenavOpen = !sidenavOpen;
+  const nav = document.getElementById('sidenav');
+  const toggle = document.getElementById('sidenavToggle');
+  const wrapper = document.getElementById('pageWrapper');
+  if (nav) nav.classList.toggle('open', sidenavOpen);
+  if (toggle) toggle.classList.toggle('open', sidenavOpen);
+  if (wrapper && window.innerWidth > 768) wrapper.classList.toggle('nav-open', sidenavOpen);
+}
+
+// 页面渲染完成后构建侧边栏
+window.addEventListener('DOMContentLoaded', function() {
+  setTimeout(buildSidenav, 300);
+});
 </script>
 </body>
 </html>
