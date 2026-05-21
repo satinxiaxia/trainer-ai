@@ -593,6 +593,48 @@ document.addEventListener('keydown', e => {
 // Init
 renderModules();
 renderInnovation();
+
+// ========== Supabase 数据上报 ==========
+const SUPABASE_URL = 'https://omcxlxcamweynlgfvcqy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_XYLqYjkf-c3baMDdZ3yCgQ_37OCkSed';
+
+async function trackEvent(table, data) {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(data)
+    });
+  } catch(e) { /* 静默失败，不影响用户体验 */ }
+}
+
+// 页面访问记录
+trackEvent('page_views', {
+  page: 'index',
+  user_agent: navigator.userAgent,
+  referrer: document.referrer || 'direct'
+});
+
+// 劫持 openModal，记录工具点击
+const _origOpenModal = openModal;
+window.openModal = function(tool) {
+  if (tool && tool.name) {
+    trackEvent('tool_events', {
+      tool_id: (tool.name || '').replace(/\s+/g, '_').toLowerCase(),
+      tool_name: tool.name,
+      module_id: tool.module || 'unknown',
+      action: 'open',
+      user_agent: navigator.userAgent,
+      referrer: document.referrer || 'direct'
+    });
+  }
+  _origOpenModal(tool);
+};
 </script>
 </body>
 </html>
