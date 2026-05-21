@@ -549,8 +549,18 @@ const AI_TOOLS_MAP = {
   promotion: [
     { name: 'DeepSeek', icon: '🤖', url: 'https://chat.deepseek.com', tag: '最优', desc: '宣传文案和推文内容生成效果最佳' },
     { name: '讯飞智文', icon: '📊', url: 'https://zhiwen.xfyun.cn', desc: '课程宣传PPT和海报文案一键生成' },
-    { name: '剧映AI', icon: '🎬', url: 'https://www.capcut.cn', desc: '定制宣传短视频脚本和数字人播报' },
     { name: '通义千问', icon: '🌐', url: 'https://tongyi.aliyun.com', desc: '多渠道推广文案并行生成' }
+  ],
+  promotion_video: [
+    { name: '剧映AI', icon: '🎬', url: 'https://www.capcut.cn', tag: '最优', desc: '数字人+文字转视频+AI配音一站式，国内最易用' },
+    { name: '腾讯智影', icon: '🤖', url: 'https://zenvideo.qq.com', desc: '数字人播报效果好，适合标准化培训讲解视频' },
+    { name: '讯飞配音', icon: '🔊', url: 'https://peiyin.xunfei.cn', desc: '语音最自然，支持多种情感风格，培训配音首选' },
+    { name: 'Runway', icon: '✨', url: 'https://runwayml.com', desc: '国际顶级AI视频工具，创意宣传片制作能力强' }
+  ],
+  promotion_music: [
+    { name: 'Suno', icon: '🎵', url: 'https://suno.com', tag: '最优', desc: '目前最强AI音乐生成，输入歌词即可生成完整歌曲' },
+    { name: 'Udio', icon: '🎶', url: 'https://www.udio.com', desc: '音乐风格多样，适合生成课程主题曲和背景音乐' },
+    { name: '歌歌AI', icon: '🎪', url: 'https://www.gege.ai', desc: '国产音乐生成工具，中文歌词处理效果更好' }
   ],
   innovation: [
     { name: 'DeepSeek', icon: '🤖', url: 'https://chat.deepseek.com', tag: '最优', desc: '构建个人知识库和 AI 分身第一选' },
@@ -562,7 +572,11 @@ const AI_TOOLS_MAP = {
 
 function renderToolRecommend(tool) {
   const el = document.getElementById('toolRecommend');
-  const moduleKey = tool.module || 'analysis';
+  let moduleKey = tool.module || 'analysis';
+  // 视频/音乐工具用专属推荐
+  if (tool.name === '课程简介视频生成') moduleKey = 'promotion_video';
+  if (tool.name === 'AI课程主题歌创作') moduleKey = 'promotion_music';
+  if (tool.name === '课程宣传视频脚本') moduleKey = 'promotion_video';
   const tools = AI_TOOLS_MAP[moduleKey] || AI_TOOLS_MAP.analysis;
   let html = '<div style="border-top:1px solid #1e293b;padding-top:14px;margin-top:4px">';
   html += '<p style="color:#94a3b8;font-size:.78rem;margin-bottom:10px;letter-spacing:.03em">💡 推荐 AI 工具（复制Prompt后直接跳转）</p>';
