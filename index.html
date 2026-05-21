@@ -18,22 +18,17 @@ background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 button{cursor:pointer;border:none;font-family:inherit}
 
-/* 左侧导航栏 */
-.sidenav{position:fixed;left:0;top:64px;bottom:0;width:220px;background:rgba(15,23,42,0.97);border-right:1px solid var(--border);overflow-y:auto;z-index:900;transform:translateX(-100%);transition:transform .3s;scrollbar-width:thin;scrollbar-color:#334155 transparent}
-.sidenav.open{transform:translateX(0)}
+/* 左侧导航栏 - 常驻显示 */
+.sidenav{position:fixed;left:0;top:64px;bottom:0;width:200px;background:#0c1527;border-right:1px solid var(--border);overflow-y:auto;z-index:100;scrollbar-width:thin;scrollbar-color:#334155 transparent}
 .sidenav-inner{padding:12px 0 80px}
-.sidenav-module{padding:10px 16px 4px;font-size:.68rem;color:#64748b;text-transform:uppercase;letter-spacing:.08em;font-weight:700;display:flex;align-items:center;gap:6px}
-.sidenav-tool{display:block;padding:7px 16px 7px 28px;font-size:.8rem;color:#94a3b8;cursor:pointer;transition:.15s;border-left:2px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sidenav-tool:hover{color:#e2e8f0;background:rgba(99,102,241,0.08);border-left-color:#6366f1}
-.sidenav-tool.active{color:#6366f1;border-left-color:#6366f1;font-weight:600}
-.sidenav-toggle{position:fixed;left:0;top:50%;transform:translateY(-50%);width:32px;height:80px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:0 12px 12px 0;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:901;transition:left .3s;font-size:.75rem;color:#fff;writing-mode:vertical-lr;letter-spacing:.12em;font-weight:700;box-shadow:2px 0 16px rgba(99,102,241,0.5)}
-.sidenav-toggle:hover{width:38px;box-shadow:2px 0 24px rgba(99,102,241,0.7)}
-.sidenav-toggle.open{left:220px}
-.page-wrapper{transition:none}
-.page-wrapper.nav-open{padding-left:0}
-@media(max-width:768px){.sidenav-toggle.open{left:220px}}
-.sidenav-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:899}
-.sidenav-overlay.show{display:block}
+.sidenav-module{padding:10px 14px 4px;font-size:.65rem;color:#475569;text-transform:uppercase;letter-spacing:.08em;font-weight:700;display:flex;align-items:center;gap:5px;margin-top:4px}
+.sidenav-tool{display:block;padding:6px 14px 6px 24px;font-size:.78rem;color:#64748b;cursor:pointer;transition:.15s;border-left:2px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidenav-tool:hover{color:#e2e8f0;background:rgba(99,102,241,0.1);border-left-color:#6366f1;color:#a5b4fc}
+.sidenav-tool.active{color:#6366f1;border-left-color:#6366f1;font-weight:600;background:rgba(99,102,241,0.08)}
+.sidenav-toggle{display:none}
+.sidenav-overlay{display:none}
+.page-wrapper{margin-left:200px}
+@media(max-width:900px){.sidenav{display:none}.page-wrapper{margin-left:0}}
 
 /* NAV */
 .navbar{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(15,23,42,0.92);
@@ -239,8 +234,7 @@ padding:6px 16px;border-radius:20px;font-size:.8rem;transition:all .2s}
 <div class="sidenav" id="sidenav">
   <div class="sidenav-inner" id="sidenavInner"></div>
 </div>
-<div class="sidenav-toggle" id="sidenavToggle" onclick="toggleSidenav()" title="快捷导航">☰<br>工具</div>
-<div class="sidenav-overlay" id="sidenavOverlay" onclick="toggleSidenav()"></div>
+
 
 <!-- MODULES CONTAINER -->
 <div class="page-wrapper" id="pageWrapper">
