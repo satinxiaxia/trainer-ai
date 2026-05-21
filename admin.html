@@ -894,88 +894,92 @@ async function sbFetch(path, params='') {
 async function loadRealStats() {
   const todayStart = new Date(); todayStart.setHours(0,0,0,0);
   const todayISO = todayStart.toISOString();
+  const moduleEmoji = {analysis:'🔍',design:'📐',development:'🛠️',implementation:'🎮',evaluation:'📊',promotion:'📢',innovation:'✨'};
 
-  // 并行拉取所有需要的数据（用 select=id 减少传输量，最多拉1000条）
-  const [allEvents, todayEvents, allViews, todayViews] = await Promise.all([
-    sbFetch('tool_events', '?select=id,tool_name,module_id,created_at&order=created_at.desc&limit=1000'),
-    sbFetch('tool_events', `?select=id&created_at=gte.${todayISO}`),
-    sbFetch('page_views', '?select=id&limit=1000'),
-    sbFetch('page_views', `?select=id&created_at=gte.${todayISO}`)
-  ]);
+  // === 1. 工具使用总数 ===
+  try {
+    const r = await sbFetch('tool_events', '?select=id&limit=1000');
+    document.getElementById('kpi-uses').textContent = (r ? r.length : 0).toLocaleString();
+  } catch(e) { document.getElementById('kpi-uses').textContent = '0'; }
 
-  // KPI 数字
-  const totalUses = allEvents ? allEvents.length : 0;
-  const todayUses = todayEvents ? todayEvents.length : 0;
-  const totalViews = allViews ? allViews.length : 0;
-  document.getElementById('kpi-uses').textContent = totalUses.toLocaleString();
-  document.getElementById('kpi-today').textContent = todayUses.toLocaleString();
-  document.getElementById('kpi-views').textContent = totalViews.toLocaleString();
+  // === 2. 今日使用次数 ===
+  try {
+    const r = await sbFetch('tool_events', '?select=id&created_at=gte.' + todayISO);
+    const n = r ? r.length : 0;
+    document.getElementById('kpi-today').textContent = n.toLocaleString();
+    const uvTool = document.getElementById('uv-tool-today');
+    if (uvTool) uvTool.textContent = n.toLocaleString();
+  } catch(e) { document.getElementById('kpi-today').textContent = '0'; }
 
-  // 用户管理页 KPI
-  const uvPageTotal = document.getElementById('uv-page-total');
-  const uvPageToday = document.getElementById('uv-page-today');
-  const uvToolToday = document.getElementById('uv-tool-today');
-  if (uvPageTotal) uvPageTotal.textContent = totalViews.toLocaleString();
-  if (uvPageToday) uvPageToday.textContent = (todayViews ? todayViews.length : 0).toLocaleString();
-  if (uvToolToday) uvToolToday.textContent = todayUses.toLocaleString();
+  // === 3. 总访问次数 ===
+  try {
+    const r = await sbFetch('page_views', '?select=id&limit=1000');
+    const n = r ? r.length : 0;
+    document.getElementById('kpi-views').textContent = n.toLocaleString();
+    const uvTotal = document.getElementById('uv-page-total');
+    if (uvTotal) uvTotal.textContent = n.toLocaleString();
+  } catch(e) { document.getElementById('kpi-views').textContent = '0'; }
 
-  // 热门工具 Top5
-  const toolStats = await sbFetch('tool_events', '?select=tool_name&order=created_at.desc&limit=500');
-  if (toolStats && toolStats.length > 0) {
-    const counts = {};
-    toolStats.forEach(r => { counts[r.tool_name] = (counts[r.tool_name] || 0) + 1; });
-    const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,5);
+  // === 4. 今日页面访问 ===
+  try {
+    const r = await sbFetch('page_views', '?select=id&created_at=gte.' + todayISO);
+    const uvToday = document.getElementById('uv-page-today');
+    if (uvToday) uvToday.textContent = (r ? r.length : 0).toLocaleString();
+  } catch(e) {}
+
+  // === 5. 热门工具 Top5 ===
+  try {
+    const r = await sbFetch('tool_events', '?select=tool_name&limit=500');
     const container = document.getElementById('hotToolsList');
-    if (container) {
-      container.innerHTML = sorted.map((([name, cnt], i) => 
+    if (container && r && r.length > 0) {
+      const counts = {};
+      r.forEach(x => { counts[x.tool_name] = (counts[x.tool_name]||0) + 1; });
+      const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+      container.innerHTML = sorted.map(([name,cnt],i) =>
         `<div class="hot-item"><span class="hot-rank">${i+1}</span><span class="hot-name">${name}</span><span class="hot-count">${cnt}次</span></div>`
-      )).join('');
+      ).join('');
+    } else if (container) {
+      container.innerHTML = '<div style="color:var(--text-muted);padding:12px">暂无数据</div>';
     }
-  }
+  } catch(e) {}
 
-  // 最近使用记录（最新10条）
-  const recentEvents = await sbFetch('tool_events', '?select=tool_name,module_id,created_at&order=created_at.desc&limit=10');
-  const container = document.getElementById('recentFeedback');
-  if (container) {
-    if (recentEvents && recentEvents.length > 0) {
-      const moduleEmoji = {analysis:'🔍',design:'📐',development:'🛠️',implementation:'🎮',evaluation:'📊',promotion:'📢',innovation:'✨',unknown:'🔧'};
-      container.innerHTML = recentEvents.map(r => {
-        const t = new Date(r.created_at);
-        const now = new Date();
-        const diffMin = Math.floor((now - t) / 60000);
-        const timeStr = diffMin < 1 ? '刚刚' : diffMin < 60 ? `${diffMin}分钟前` : diffMin < 1440 ? `${Math.floor(diffMin/60)}小时前` : `${Math.floor(diffMin/1440)}天前`;
-        const emoji = moduleEmoji[r.module_id] || '🔧';
-        return `<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-          <div><span style="font-size:.85rem">${emoji} <strong>${r.tool_name}</strong></span><br><span style="font-size:.75rem;color:var(--text-muted)">被使用</span></div>
-          <span style="font-size:.75rem;color:var(--text-muted);white-space:nowrap">${timeStr}</span>
-        </div>`;
-      }).join('');
-    } else {
-      container.innerHTML = '<div style="color:var(--text-muted);font-size:.85rem;padding:20px;text-align:center">暂无使用记录<br><span style="font-size:.75rem">用户使用工具后将自动记录</span></div>';
+  // === 6. 最新使用记录 ===
+  try {
+    const r = await sbFetch('tool_events', '?select=tool_name,module_id,created_at&order=created_at.desc&limit=10');
+    const container = document.getElementById('recentFeedback');
+    if (container) {
+      if (r && r.length > 0) {
+        container.innerHTML = r.map(x => {
+          const t = new Date(x.created_at), now = new Date();
+          const dm = Math.floor((now-t)/60000);
+          const ts = dm<1?'刚刚':dm<60?dm+'分钟前':dm<1440?Math.floor(dm/60)+'小时前':Math.floor(dm/1440)+'天前';
+          const em = moduleEmoji[x.module_id]||'🔧';
+          return `<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center"><div><span style="font-size:.85rem">${em} <strong>${x.tool_name}</strong></span><br><span style="font-size:.75rem;color:var(--text-muted)">被使用</span></div><span style="font-size:.75rem;color:var(--text-muted);white-space:nowrap">${ts}</span></div>`;
+        }).join('');
+      } else {
+        container.innerHTML = '<div style="color:var(--text-muted);font-size:.85rem;padding:20px;text-align:center">暂无使用记录</div>';
+      }
     }
-  }
+  } catch(e) {}
 
-  // 用户管理页：利用上面已拉取的 allEvents 直接复用，不再重复请求
-  const pvRecent = await sbFetch('page_views', '?select=created_at,user_agent&order=created_at.desc&limit=50');
-  const allRecords = [
-    ...(pvRecent||[]).map(r => ({time: r.created_at, type: '📖 页面访问', content: '主页', ua: r.user_agent})),
-    ...(allEvents||[]).slice(0,50).map(r => ({time: r.created_at, type: '🛠️ 工具使用', content: r.tool_name, ua: r.user_agent||''}))
-  ].sort((a,b) => new Date(b.time) - new Date(a.time)).slice(0,100);
-
-  const tbody = document.getElementById('realVisitBody');
-  if (tbody) {
-    if (allRecords.length > 0) {
-      tbody.innerHTML = allRecords.map(r => {
-        const t = new Date(r.time);
-        const timeStr = `${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
-        const ua = r.ua || '';
-        const device = ua.includes('iPhone')||ua.includes('Android') ? '📱 手机' : ua.includes('iPad') ? '📱 平板' : '💻 电脑';
-        return `<tr><td style="white-space:nowrap;color:var(--text-muted);font-size:.8rem">${timeStr}</td><td>${r.type}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.content}</td><td>${device}</td></tr>`;
-      }).join('');
-    } else {
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:30px">暂无访问记录，用户访问后将自动显示</td></tr>';
+  // === 7. 用户管理页访问记录 ===
+  try {
+    const r = await sbFetch('tool_events', '?select=tool_name,created_at,user_agent&order=created_at.desc&limit=100');
+    const tbody = document.getElementById('realVisitBody');
+    if (tbody) {
+      if (r && r.length > 0) {
+        tbody.innerHTML = r.map(x => {
+          const t = new Date(x.created_at);
+          const ts = `${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+          const ua = x.user_agent||'';
+          const dev = ua.includes('iPhone')||ua.includes('Android')?'📱 手机':ua.includes('iPad')?'📱 平板':'💻 电脑';
+          return `<tr><td style="white-space:nowrap;color:var(--text-muted);font-size:.8rem">${ts}</td><td>🛠️ 工具使用</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.tool_name}</td><td>${dev}</td></tr>`;
+        }).join('');
+      } else {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:30px">暂无访问记录</td></tr>';
+      }
     }
-  }
+  } catch(e) {}
 }
 
 // Init
