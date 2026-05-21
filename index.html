@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrainerAI 培训师AI工具仓</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--primary:#1e3a5f;--accent:#6366f1;--accent2:#8b5cf6;--bg:#0f172a;--card:#1e293b;
+--card-hover:#253348;--text:#e2e8f0;--text-muted:#94a3b8;--border:#334155;
+--success:#10b981;--warning:#f59e0b;--danger:#ef4444;--gradient:linear-gradient(135deg,#6366f1,#8b5cf6);
+--radius:12px;--shadow:0 4px 24px rgba(0,0,0,0.3);
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'PingFang SC','Microsoft YaHei',sans-serif;
+background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;border:none;font-family:inherit}
+
+/* NAV */
+.navbar{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(15,23,42,0.92);
+backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;
+justify-content:space-between;padding:0 24px;z-index:1000;transition:box-shadow .3s}
+.navbar.scrolled{box-shadow:0 2px 20px rgba(0,0,0,0.4)}
+.nav-brand{display:flex;align-items:center;gap:10px;font-size:1.25rem;font-weight:700}
+.nav-logo{width:36px;height:36px;background:var(--gradient);border-radius:8px;display:flex;
+align-items:center;justify-content:center;font-size:1.1rem;color:#fff}
+.nav-actions{display:flex;align-items:center;gap:12px}
+.nav-admin-btn{background:var(--gradient);color:#fff;padding:8px 20px;border-radius:8px;
+font-size:.875rem;font-weight:600;transition:transform .2s,box-shadow .2s}
+.nav-admin-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(99,102,241,0.4)}
+
+/* HERO */
+.hero{padding:120px 24px 60px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-200px;left:50%;transform:translateX(-50%);
+width:800px;height:800px;background:radial-gradient(circle,rgba(99,102,241,0.15) 0%,transparent 70%);
+pointer-events:none}
+.hero h1{font-size:clamp(1.8rem,5vw,3.2rem);font-weight:800;margin-bottom:16px;
+background:linear-gradient(135deg,#e2e8f0,#6366f1);-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:clamp(1rem,2.5vw,1.2rem);color:var(--text-muted);max-width:700px;margin:0 auto 32px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(99,102,241,0.15);
+border:1px solid rgba(99,102,241,0.3);border-radius:20px;padding:6px 16px;font-size:.8rem;color:#a5b4fc;margin-bottom:24px}
+.hero-search{max-width:500px;margin:0 auto;position:relative}
+.hero-search input{width:100%;padding:14px 20px 14px 48px;background:var(--card);border:1px solid var(--border);
+border-radius:12px;color:var(--text);font-size:1rem;outline:none;transition:border-color .2s}
+.hero-search input:focus{border-color:var(--accent)}
+.hero-search .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);
+color:var(--text-muted);font-size:1.1rem}
+
+/* SECTION */
+.section{padding:40px 24px;max-width:1280px;margin:0 auto}
+.section-header{margin-bottom:32px}
+.section-header h2{font-size:1.5rem;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.section-header p{color:var(--text-muted);font-size:.95rem}
+
+/* MODULE CARDS GRID */
+.module-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}
+.tool-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+padding:24px;transition:transform .25s,box-shadow .25s,border-color .25s;position:relative;overflow:hidden}
+.tool-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+background:var(--gradient);opacity:0;transition:opacity .25s}
+.tool-card:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:rgba(99,102,241,0.3)}
+.tool-card:hover::before{opacity:1}
+.tool-card .card-icon{font-size:2rem;margin-bottom:12px}
+.tool-card h3{font-size:1.1rem;font-weight:600;margin-bottom:8px}
+.tool-card .card-desc{color:var(--text-muted);font-size:.875rem;margin-bottom:16px;
+display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tool-card .card-scene{display:inline-block;background:rgba(99,102,241,0.1);color:#a5b4fc;
+font-size:.75rem;padding:3px 10px;border-radius:12px;margin-bottom:16px}
+.btn-use{background:var(--gradient);color:#fff;padding:8px 20px;border-radius:8px;
+font-size:.85rem;font-weight:600;transition:opacity .2s;width:100%;text-align:center}
+.btn-use:hover{opacity:.85}
+
+/* INNOVATION SECTION */
+.innovation-section{background:linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.08));
+border:1px solid rgba(99,102,241,0.2);border-radius:16px;padding:32px;margin:40px auto;
+max-width:1280px;position:relative;overflow:hidden}
+.innovation-section::before{content:'✨';position:absolute;top:-20px;right:40px;font-size:6rem;opacity:.1}
+.innovation-section h2{font-size:1.5rem;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.innovation-section>p{color:var(--text-muted);margin-bottom:24px}
+.innovation-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.innovation-card{background:rgba(30,41,59,0.8);border:1px solid rgba(99,102,241,0.25);
+border-radius:var(--radius);padding:20px;transition:transform .25s,box-shadow .25s,border-color .25s}
+.innovation-card:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(99,102,241,0.2);border-color:rgba(99,102,241,0.5)}
+.innovation-card h3{font-size:1rem;font-weight:600;margin-bottom:6px}
+.innovation-card .card-desc{color:var(--text-muted);font-size:.85rem;margin-bottom:12px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);
+z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;
+opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}
+.modal-overlay.active{opacity:1;visibility:visible}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;
+width:100%;max-width:640px;max-height:90vh;overflow-y:auto;padding:32px;position:relative;
+transform:translateY(20px) scale(0.97);transition:transform .3s}
+.modal-overlay.active .modal{transform:translateY(0) scale(1)}
+.modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;background:rgba(255,255,255,0.1);
+border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+color:var(--text-muted);transition:background .2s}
+.modal-close:hover{background:rgba(255,255,255,0.2)}
+.modal h2{font-size:1.3rem;font-weight:700;margin-bottom:4px;padding-right:40px}
+.modal .modal-desc{color:var(--text-muted);font-size:.9rem;margin-bottom:20px}
+.modal .steps{margin-bottom:20px}
+.modal .steps h4{font-size:.9rem;font-weight:600;margin-bottom:10px;color:var(--accent)}
+.modal .step{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;font-size:.875rem;color:var(--text-muted)}
+.modal .step-num{width:24px;height:24px;background:var(--gradient);border-radius:50%;display:flex;
+align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#fff;flex-shrink:0}
+.modal .prompt-area{margin-bottom:20px}
+.modal .prompt-area label{display:block;font-size:.85rem;font-weight:600;margin-bottom:8px}
+.modal textarea{width:100%;min-height:180px;background:rgba(0,0,0,0.3);border:1px solid var(--border);
+border-radius:8px;padding:12px;color:var(--text);font-size:.85rem;font-family:inherit;resize:vertical;
+outline:none;transition:border-color .2s}
+.modal textarea:focus{border-color:var(--accent)}
+.modal-actions{display:flex;gap:10px;flex-wrap:wrap}
+.modal-actions button{padding:10px 20px;border-radius:8px;font-size:.85rem;font-weight:600;
+transition:opacity .2s,transform .1s}
+.modal-actions button:active{transform:scale(0.97)}
+.btn-copy{background:var(--gradient);color:#fff}
+.btn-chatgpt{background:#10a37f;color:#fff}
+.btn-claude{background:var(--card);border:1px solid var(--border);color:var(--text)}
+.btn-copy:hover,.btn-chatgpt:hover,.btn-claude:hover{opacity:.85}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+background:#10b981;color:#fff;padding:10px 24px;border-radius:8px;font-size:.9rem;font-weight:600;
+opacity:0;transition:opacity .3s,transform .3s;z-index:3000;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* FOOTER */
+.footer{background:var(--card);border-top:1px solid var(--border);padding:40px 24px;margin-top:60px}
+.footer-inner{max-width:1280px;margin:0 auto}
+.footer-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:32px;margin-bottom:32px}
+.footer-col h4{font-size:1rem;font-weight:700;margin-bottom:12px}
+.footer-col p,.footer-col li{color:var(--text-muted);font-size:.85rem;line-height:1.8}
+.footer-col ul{list-style:none}
+.footer-col a:hover{color:var(--accent)}
+.footer-stats{display:flex;gap:32px;flex-wrap:wrap;margin-bottom:24px;padding:20px;
+background:rgba(99,102,241,0.08);border-radius:12px;border:1px solid rgba(99,102,241,0.15)}
+.footer-stat{text-align:center}
+.footer-stat .num{font-size:1.8rem;font-weight:800;background:var(--gradient);-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;background-clip:text}
+.footer-stat .label{font-size:.8rem;color:var(--text-muted)}
+.footer-map{background:rgba(0,0,0,0.2);border-radius:12px;padding:20px;margin-bottom:24px}
+.footer-map h4{margin-bottom:8px;font-size:1rem}
+.footer-map p{color:var(--text-muted);font-size:.85rem}
+.footer-map .map-steps{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap}
+.footer-map .map-step{background:rgba(99,102,241,0.15);padding:8px 16px;border-radius:8px;
+font-size:.8rem;font-weight:600;color:#a5b4fc}
+.footer-bottom{text-align:center;color:var(--text-muted);font-size:.8rem;padding-top:20px;border-top:1px solid var(--border)}
+
+/* MOBILE NAV */
+.mobile-menu-btn{display:none;background:none;color:var(--text);font-size:1.4rem;padding:4px}
+@media(max-width:768px){
+.module-grid,.innovation-grid{grid-template-columns:1fr}
+.mobile-menu-btn{display:block}
+.nav-admin-btn span{display:none}
+.nav-admin-btn::after{content:'管理'}
+.hero h1{font-size:1.8rem}
+.modal{padding:24px;margin:10px}
+.footer-stats{flex-direction:column;gap:16px;align-items:center}
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#475569}
+
+/* ANIMATIONS */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.fade-in-up{animation:fadeInUp .6s ease both}
+.tool-card,.innovation-card{animation:fadeInUp .5s ease both}
+.tool-card:nth-child(2),.innovation-card:nth-child(2){animation-delay:.05s}
+.tool-card:nth-child(3),.innovation-card:nth-child(3){animation-delay:.1s}
+.tool-card:nth-child(4),.innovation-card:nth-child(4){animation-delay:.15s}
+.tool-card:nth-child(5),.innovation-card:nth-child(5){animation-delay:.2s}
+.tool-card:nth-child(6),.innovation-card:nth-child(6){animation-delay:.25s}
+
+/* NAV FILTER */
+.nav-filter{display:flex;gap:8px;padding:0 24px;max-width:1280px;margin:0 auto 20px;flex-wrap:wrap}
+.nav-filter button{background:var(--card);border:1px solid var(--border);color:var(--text-muted);
+padding:6px 16px;border-radius:20px;font-size:.8rem;transition:all .2s}
+.nav-filter button:hover,.nav-filter button.active{background:var(--gradient);color:#fff;border-color:transparent}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="nav-brand">
+    <div class="nav-logo">🦐</div>
+    <span>TrainerAI</span>
+  </div>
+  <div class="nav-actions">
+    <button class="nav-admin-btn" onclick="window.location.href='admin.html'">
+      <span>管理后台</span>⚙️
+    </button>
+    <button class="mobile-menu-btn" onclick="document.querySelector('.nav-filter').classList.toggle('show')">☰</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">🚀 基于 MAP 模型设计 · 42 款AI工具</div>
+  <h1>AI 培训师工具仓</h1>
+  <p>覆盖培训全生命周期的 AI 工具集合 —— 从需求分析到课程宣发，让每位培训师都拥有 AI 超能力</p>
+  <div class="hero-search">
+    <span class="search-icon">🔍</span>
+    <input type="text" placeholder="搜索工具名称或描述..." id="searchInput" oninput="filterTools()">
+  </div>
+</section>
+
+<!-- NAV FILTER -->
+<div class="nav-filter" id="navFilter">
+  <button class="active" onclick="filterModule('all',this)">全部</button>
+  <button onclick="filterModule('analysis',this)">🔍 需求分析</button>
+  <button onclick="filterModule('design',this)">📐 课程设计</button>
+  <button onclick="filterModule('development',this)">🛠️ 资料制作</button>
+  <button onclick="filterModule('implementation',this)">🎮 互动体验</button>
+  <button onclick="filterModule('evaluation',this)">📊 培训评估</button>
+  <button onclick="filterModule('promotion',this)">📢 课程宣发</button>
+  <button onclick="filterModule('innovation',this)">✨ 创新场景</button>
+</div>
+
+<!-- MODULES CONTAINER -->
+<div id="modulesContainer"></div>
+
+<!-- INNOVATION SECTION -->
+<div class="innovation-section" id="innovationSection">
+  <h2>✨ AI增强创新场景</h2>
+  <p>前沿 AI 能力，重新定义培训的未来</p>
+  <div class="innovation-grid" id="innovationGrid"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h2 id="modalTitle"></h2>
+    <p class="modal-desc" id="modalDesc"></p>
+    <div class="steps" id="modalSteps">
+      <h4>📋 使用步骤</h4>
+      <div id="stepsList"></div>
+    </div>
+    <div class="prompt-area">
+      <label>🤖 Prompt 提示词模板</label>
+      <textarea id="modalPrompt"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-copy" onclick="copyPrompt()">📋 复制 Prompt</button>
+      <button class="btn-chatgpt" onclick="window.open('https://chat.openai.com','_blank')">💬 在 ChatGPT 中使用</button>
+      <button class="btn-claude" onclick="window.open('https://claude.ai','_blank')">🧠 在 Claude 中使用</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-stats">
+      <div class="footer-stat"><div class="num" id="totalTools">42</div><div class="label">AI工具总数</div></div>
+      <div class="footer-stat"><div class="num">6</div><div class="label">核心模块</div></div>
+      <div class="footer-stat"><div class="num">1</div><div class="label">MAP模型</div></div>
+      <div class="footer-stat"><div class="num">∞</div><div class="label">效率提升</div></div>
+    </div>
+    <div class="footer-map">
+      <h4>🗺️ MAP 模型简介</h4>
+      <p>TrainerAI 基于《AIGC培训师课程开发全攻略》MAP模型设计，通过三个核心维度赋能培训全流程：</p>
+      <div class="map-steps">
+        <div class="map-step">M - Model 教学模型</div>
+        <div class="map-step">A - AIGC AI生成内容</div>
+        <div class="map-step">P - Prompt 提示工程</div>
+      </div>
+    </div>
+    <div class="footer-grid">
+      <div class="footer-col">
+        <h4>🔍 需求分析</h4>
+        <ul><li>智能访谈助手</li><li>问卷智能设计器</li><li>需求分析报告生成器</li><li>绩效差距诊断</li><li>学员画像构建</li><li>竞标提案AI助手</li></ul>
+      </div>
+      <div class="footer-col">
+        <h4>📐 课程设计</h4>
+        <ul><li>教学目标生成器</li><li>课程大纲设计师</li><li>知识图谱构建器</li><li>教学策略推荐</li><li>案例库智能搜索</li><li>课程时间规划</li></ul>
+      </div>
+      <div class="footer-col">
+        <h4>🛠️ 资料制作</h4>
+        <ul><li>PPT大纲转内容</li><li>培训师手册生成</li><li>学员手册制作</li><li>视频脚本生成</li><li>测试题库生成</li><li>微课内容设计</li></ul>
+      </div>
+      <div class="footer-col">
+        <h4>关于</h4>
+        <ul><li><a href="admin.html">管理后台</a></li><li><a href="#">使用帮助</a></li><li><a href="#">联系我们</a></li><li><a href="#">MAP模型课程</a></li></ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 TrainerAI 培训师AI工具仓 · 基于 MAP 模型 · 让每位培训师都拥有 AI 超能力 🦐</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Tool data
+const toolsData = {
+  analysis: {
+    name: '🔍 需求分析 Analysis',
+    desc: '精准识别培训需求，为课程设计奠定坚实基础',
+    tools: [
+      { name:'智能访谈助手', icon:'🎤', desc:'AI生成结构化访谈问题，自动分析访谈记录，提炼培训需求痛点', scene:'需求调研阶段',
+        steps:['输入培训背景和访谈对象信息','AI自动生成结构化访谈问题清单','将访谈记录粘贴到AI进行分析','获取提炼后的需求痛点和关键发现'],
+        prompt:'你是一位资深培训需求分析专家。请基于以下培训背景信息，为我生成一份结构化的访谈问题清单。\n\n培训背景：[在此描述培训主题、目标群体、行业等]\n访谈对象：[描述被访谈者的角色、层级]\n\n请按照以下维度生成访谈问题：\n1. 现状与痛点（5-8个问题）\n2. 期望与目标（3-5个问题）\n3. 资源与环境（3-5个问题）\n4. 过往经验（2-3个问题）\n\n要求：问题要开放、具体、可操作，避免引导性提问。每个问题附带追问建议。' },
+      { name:'问卷智能设计器', icon:'📝', desc:'输入培训背景，AI生成专业调研问卷，支持多种题型', scene:'大规模需求收集',
+        steps:['输入培训项目基本信息','设定目标人群和样本量','选择问卷类型（单选/多选/量表/开放题）','AI生成完整问卷并支持预览调整'],
+        prompt:'你是一位专业的培训调研问卷设计专家。请根据以下信息设计一份培训需求调研问卷。\n\n培训主题：[填写]\n目标学员：[填写]\n样本量：[填写]\n\n问卷要求：\n1. 包含基本信息（3题）\n2. 现状评估（使用李克特5点量表，5题）\n3. 需求优先级排序（2题）\n4. 学习方式偏好（2题）\n5. 开放建议（1题）\n\n请确保问卷专业、简洁、无歧义，总题数不超过15题。每题标注题型和作答说明。' },
+      { name:'培训需求分析报告生成器', icon:'📊', desc:'上传原始数据，AI自动生成结构化需求分析报告', scene:'正式报告输出',
+        steps:['输入或粘贴原始调研数据','设定报告格式和要求','AI生成结构化分析报告','审核并导出报告'],
+        prompt:'你是一位资深培训咨询顾问。请根据以下原始调研数据，撰写一份专业的培训需求分析报告。\n\n【原始数据】\n[粘贴问卷统计、访谈摘要、绩效数据等]\n\n报告结构要求：\n1. 执行摘要（200字以内）\n2. 调研方法说明\n3. 现状分析（含数据图表建议）\n4. 关键发现与痛点提炼\n5. 培训需求优先级排序\n6. 培训建议方案\n7. 预期ROI分析\n\n语言要求：专业、精炼、数据驱动，使用咨询报告标准格式。' },
+      { name:'绩效差距诊断工具', icon:'🎯', desc:'基于现状vs目标分析，AI识别关键绩效差距和根因', scene:'绩效改进项目',
+        steps:['描述当前绩效表现数据','设定目标绩效标准','AI进行差距分析和根因诊断','获取改进建议和培训方案'],
+        prompt:'你是一位绩效改进专家，擅长运用Gilbert行为工程模型和根因分析方法。\n\n请分析以下绩效差距：\n当前表现：[描述现状数据]\n目标标准：[描述期望水平]\n差距描述：[具体差距]\n\n请按以下框架分析：\n1. 差距量化描述\n2. 可能的根因分析（知识/技能/动机/环境/反馈/激励）\n3. 哪些差距可通过培训解决\n4. 哪些需要非培训手段\n5. 推荐的培训干预方案\n\n输出需包含鱼骨图建议和分析矩阵。' },
+      { name:'学员画像构建器', icon:'👤', desc:'AI分析学员背景，自动生成多维度学员画像', scene:'课程定制化设计',
+        steps:['输入学员群体基本信息','选择画像维度（年龄/学历/经验/学习风格等）','AI生成多维度学员画像','基于画像调整课程设计'],
+        prompt:'你是一位学习科学专家，擅长构建学习者画像。\n\n请基于以下学员信息构建详细的学员画像：\n学员群体：[描述]\n人数规模：[填写]\n行业背景：[填写]\n\n请生成包含以下维度的画像：\n1. 人口统计特征（年龄、学历、职级分布）\n2. 知识经验基础（入门/中级/高级比例）\n3. 学习风格偏好（视觉/听觉/实践型）\n4. 学习动机与痛点\n5. 技术素养水平\n6. 学习障碍预测\n\n为每个维度提供数据估计和建议的课程适配策略。' },
+      { name:'竞标提案AI助手', icon:'💼', desc:'快速生成培训方案提案，含ROI预估', scene:'培训项目竞标',
+        steps:['输入项目需求和客户信息','选择提案模板风格','AI生成完整竞标提案','调整并导出最终版本'],
+        prompt:'你是一位资深培训项目竞标专家。\n\n请基于以下竞标信息，生成一份专业的培训方案提案：\n\n客户信息：[公司名称、行业、规模]\n项目需求：[培训主题、人数、时间、预算]\n竞对手情况：[可选填写]\n\n提案需包含：\n1. 项目理解与需求分析\n2. 培训目标设计（SMART原则）\n3. 课程大纲与教学方法\n4. 讲师团队介绍框架\n5. 项目实施计划（时间线）\n6. 质量保证措施\n7. ROI预估模型\n8. 报价方案框架\n\n要求：专业、有说服力、突出差异化优势。' }
+    ]
+  },
+  design: {
+    name: '📐 课程设计 Design',
+    desc: '科学设计课程体系，打造高效学习体验',
+    tools: [
+      { name:'教学目标智能生成器', icon:'🎯', desc:'按布鲁姆6层次自动生成可测量教学目标', scene:'课程开发起点',
+        steps:['输入课程主题和受众信息','选择目标层次（识记/理解/应用/分析/评价/创造）','AI生成可测量的教学目标','审核调整并确认'],
+        prompt:'你是一位课程设计专家，精通布鲁姆教育目标分类法。\n\n课程信息：\n课程名称：[填写]\n目标学员：[描述]\n课程时长：[填写]\n前置要求：[填写]\n\n请按照布鲁姆6个认知层次，为每个层次生成2-3个可测量的教学目标。\n要求：\n1. 使用行为动词开头（如"能列举"、"会分析"、"可设计"）\n2. 目标具体可测量\n3. 注明对应的认知层次\n4. 建议配套的评估方式\n\n格式示例：\n【识记层次】\n- 学员能列举出XX的5个关键要素（评估方式：选择题测试）' },
+      { name:'课程大纲设计师', icon:'📋', desc:'AI生成逻辑清晰的课程大纲，支持多种结构模型', scene:'课程架构设计',
+        steps:['输入课程目标和时长','选择大纲结构（递进/并列/螺旋等）','AI生成详细课程大纲','根据反馈调整优化'],
+        prompt:'你是一位课程设计大师，擅长多种课程结构模型。\n\n请为以下课程设计一份详细大纲：\n课程名称：[填写]\n课程目标：[列出主要目标]\n总时长：[填写]\n学员水平：[填写]\n\n请使用"递进式"结构设计，包含：\n1. 课程导入模块（含破冰和目标说明）\n2. 核心知识模块（3-4个，由浅入深）\n3. 实践应用模块\n4. 总结与行动规划模块\n\n每个模块需包含：模块名称、时长分配、学习目标、核心内容要点、教学活动建议、评估方式。' },
+      { name:'知识图谱构建器', icon:'🔗', desc:'AI自动梳理知识点关联，生成可视化知识结构图', scene:'复杂课程设计',
+        steps:['输入课程所有知识点','AI分析知识点之间的关联关系','生成可视化知识结构图建议','用于教学顺序优化'],
+        prompt:'你是一位知识工程专家。请为以下课程构建知识图谱：\n\n课程名称：[填写]\n知识点列表：[列出所有知识点]\n\n请完成：\n1. 知识点的层级分类（核心概念→子概念→细节）\n2. 知识点之间的依赖关系（先修/后续）\n3. 知识点之间的关联强度（强/中/弱）\n4. 推荐的教学顺序\n5. 用Mermaid格式输出知识图谱代码，可用于可视化\n\n注意识别核心概念（入门必须掌握）和扩展概念（可选深入）。' },
+      { name:'教学策略推荐器', icon:'💡', desc:'根据内容特点和学员特征，推荐最优教学策略组合', scene:'教学方法选择',
+        steps:['输入课程内容和学员特征','AI分析并推荐教学策略组合','查看每种策略的适用场景','选择并组合最优方案'],
+        prompt:'你是一位教学策略专家，精通Gagne九段教学法和多种教学方法。\n\n课程信息：\n内容类型：[知识传授/技能训练/态度改变]\n学员特征：[年龄、经验、学习风格]\n课程时长：[填写]\n教学环境：[线下/线上/混合]\n\n请推荐3-4种最适合的教学策略组合，每种策略需包含：\n1. 策略名称和理论依据\n2. 具体操作方法\n3. 适用场景和注意事项\n4. 预期效果\n5. 时间分配建议' },
+      { name:'案例库智能搜索', icon:'📚', desc:'AI匹配行业最相关教学案例，支持改写和定制', scene:'案例教学准备',
+        steps:['输入课程主题和行业背景','设定案例要求和难度','AI推荐并生成匹配案例','支持改写和定制调整'],
+        prompt:'你是一位案例教学专家。请为以下课程主题生成教学案例：\n\n课程主题：[填写]\n行业背景：[填写]\n案例数量：[填写]\n案例难度：[初级/中级/高级]\n\n每个案例需包含：\n1. 案例标题\n2. 案例背景描述（200-300字）\n3. 核心冲突或挑战\n4. 3-5个讨论引导问题\n5. 建议的教学用时\n6. 教师指导要点\n\n案例要求贴近实际工作场景，具有讨论价值和多解性。' },
+      { name:'课程时间规划器', icon:'⏰', desc:'AI合理分配各模块时间，优化学习节奏', scene:'课程排期优化',
+        steps:['输入课程总时长和模块列表','设定各模块优先级','AI生成时间分配方案','根据节奏建议调整'],
+        prompt:'你是一位课程时间管理专家。\n\n请为以下课程制定详细的时间分配方案：\n课程总时长：[填写，如2天/12小时]\n课程模块：[列出所有模块名称]\n学员注意力曲线：考虑上午/下午差异\n\n请输出：\n1. 详细时间表（精确到15分钟）\n2. 每段的教学活动类型标注（讲授/讨论/练习/休息）\n3. 注意力节奏管理建议\n4. 弹性时间预留方案\n5. 超时应对预案\n\n注意：每45-60分钟需安排活动切换，每天安排2次15分钟休息和1次午餐。' }
+    ]
+  },
+  development: {
+    name: '🛠️ 课程资料制作 Development',
+    desc: '高效制作各类课程资料，提升内容产出效率',
+    tools: [
+      { name:'PPT大纲转内容框架', icon:'📑', desc:'输入大纲，AI生成完整PPT内容框架', scene:'课件快速制作',
+        steps:['输入PPT大纲或章节标题','设定风格和页数要求','AI生成每页详细内容框架','导出后用于PPT制作'],
+        prompt:'你是一位专业的PPT内容策划师。\n\n请将以下大纲转化为PPT内容框架：\n\n大纲内容：[粘贴大纲]\n预计页数：[填写]\n受众：[描述]\n风格：[专业/活泼/简约]\n\n每页需包含：\n1. 页面标题\n2. 核心要点（3-5条）\n3. 建议的视觉元素（图表/图片/图标）\n4. 演讲者备注\n\n注意：每页内容不超过6行文字，遵循"少即是多"原则。' },
+      { name:'培训师手册生成器', icon:'📖', desc:'AI自动生成详细的培训师指导手册', scene:'讲师备课',
+        steps:['输入课程大纲和教学目标','设定手册详细程度','AI生成完整培训师手册','审核补充个人经验'],
+        prompt:'你是一位资深培训师手册编写专家。\n\n请为以下课程编写详细的培训师指导手册：\n课程名称：[填写]\n课程大纲：[粘贴]\n目标学员：[描述]\n\n手册需包含：\n1. 课程概述（目标、受众、前置条件）\n2. 详细授课计划（含每个环节的时间、内容、方法）\n3. 每页PPT的讲解要点和话术建议\n4. 互动活动的操作指南\n5. 常见问题及应对策略\n6. 时间管理提示点\n7. 评估工具和标准\n8. 物料清单\n\n要求：详细到"拿来即用"的程度，包含具体的话术示例。' },
+      { name:'学员手册制作器', icon:'📒', desc:'AI生成配套学员手册，含练习题和工作纸', scene:'学员学习支持',
+        steps:['输入课程内容大纲','选择手册包含的内容模块','AI生成完整学员手册','可导出为PDF或Word'],
+        prompt:'你是一位学习材料设计专家。\n\n请为以下课程制作学员手册内容：\n课程名称：[填写]\n课程内容：[粘贴大纲]\n学员水平：[描述]\n\n手册需包含：\n1. 课程简介和学习目标\n2. 核心知识点摘要（含图示建议）\n3. 课堂练习和工作纸\n4. 自测练习题（含参考答案）\n5. 关键术语表\n6. 推荐阅读和资源链接\n7. 课后行动规划模板\n\n要求：语言简洁易懂，留有笔记空间标注，适合打印使用。' },
+      { name:'课程视频脚本生成器', icon:'🎬', desc:'AI生成完整视频脚本，含画面描述和旁白', scene:'微课视频制作',
+        steps:['输入视频主题和目标','设定视频时长和风格','AI生成分镜脚本（画面+旁白+字幕）','用于视频拍摄和剪辑'],
+        prompt:'你是一位教育视频脚本编剧。\n\n请为以下主题编写视频脚本：\n视频主题：[填写]\n目标时长：[如5分钟]\n目标受众：[描述]\n视频风格：[专业访谈/动画演示/实景拍摄]\n\n脚本格式：\n| 时间 | 画面描述 | 旁白/对白 | 字幕 | 音效/特效 |\n\n要求：\n1. 开头5秒要有吸引力（Hook）\n2. 信息密度适中，每30秒一个知识点\n3. 包含视觉辅助说明\n4. 结尾要有总结和行动召唤' },
+      { name:'测试题库智能生成', icon:'📝', desc:'根据知识点AI批量生成各类型试题', scene:'学习评估',
+        steps:['输入知识点和难度要求','选择题型（单选/多选/判断/简答）','AI批量生成试题和答案','审核调整后导入系统'],
+        prompt:'你是一位测试设计专家，精通各类题型的命题规范。\n\n请根据以下知识点生成测试题目：\n知识点：[列出]\n题型要求：[单选题X道、多选题X道、判断题X道]\n难度分布：[容易30%/中等50%/困难20%]\n\n每题需包含：\n1. 题干（清晰、无歧义）\n2. 选项（A-D，干扰项要合理）\n3. 正确答案\n4. 答案解析\n5. 标注对应的知识点和难度等级\n\n要求：干扰项要有迷惑性但可排除，避免绝对化词汇，选项长度相当。' },
+      { name:'微课内容设计师', icon:'🎓', desc:'AI设计5-10分钟微课内容，适配碎片化学习', scene:'移动学习场景',
+        steps:['输入学习主题和核心知识点','设定微课时长和目标','AI设计完整微课内容结构','生成配套练习和评估'],
+        prompt:'你是一位微课设计专家。\n\n请设计一节微课：\n主题：[填写]\n核心知识点：[列出]\n目标时长：[5/8/10分钟]\n学习场景：[手机端/电脑端]\n\n微课结构（Gagne微型版）：\n1. 吸引注意（30秒）- Hook\n2. 告知目标（30秒）\n3. 内容呈现（核心时间）- 每2分钟一个知识点\n4. 互动检验（1分钟）\n5. 总结与行动（30秒）\n\n请输出详细的脚本，包含每段的时长、内容、视觉建议和互动设计。' }
+    ]
+  },
+  implementation: {
+    name: '🎮 互动体验 Implementation',
+    desc: '设计丰富的互动环节，提升课堂参与度和学习效果',
+    tools: [
+      { name:'课堂活动设计器', icon:'🎪', desc:'AI设计创意教学活动，含角色扮演、小组讨论等', scene:'活跃课堂氛围',
+        steps:['输入课程主题和学员信息','选择活动类型偏好','AI生成完整活动方案','按方案执行并调整'],
+        prompt:'你是一位课堂活动设计专家。\n\n请为以下课程设计互动活动：\n课程主题：[填写]\n学员人数：[填写]\n可用时长：[填写]\n场地条件：[填写]\n\n请设计3个互动活动，每个活动包含：\n1. 活动名称\n2. 活动目标\n3. 详细操作步骤\n4. 所需物料\n5. 时间分配\n6. 教师引导话术\n7. 活动后的总结引导问题\n\n活动类型要多样化（角色扮演/小组讨论/案例分析/游戏化学习等）。' },
+      { name:'破冰暖场游戏库', icon:'🧊', desc:'AI推荐适合的破冰游戏，生成完整操作说明', scene:'开场破冰',
+        steps:['输入学员人数和场地条件','选择破冰风格（轻松/专业/创意）','AI推荐3-5个破冰游戏','选择并获取操作说明'],
+        prompt:'你是一位破冰活动专家。\n\n请推荐适合的破冰游戏：\n参与人数：[填写]\n时间限制：[填写]\n场地：[填写]\n学员关系：[陌生/半熟/熟悉]\n课程类型：[正式培训/工作坊/团建]\n\n请推荐5个破冰活动，按推荐度排序。每个活动包含：\n1. 游戏名称\n2. 最佳人数范围\n3. 用时\n4. 详细规则说明\n5. 教师引导话术\n6. 注意事项和备选方案\n\n要求：活动要有意义（不仅好玩，还能引出课程主题）。' },
+      { name:'案例研讨题设计', icon:'💬', desc:'AI生成贴近工作场景的案例研讨题和引导问题', scene:'深度研讨学习',
+        steps:['输入课程主题和行业背景','设定案例复杂度和研讨时长','AI生成案例和引导问题','用于课堂小组研讨'],
+        prompt:'你是一位案例教学专家。\n\n请设计案例研讨题目：\n课程主题：[填写]\n行业背景：[填写]\n研讨时长：[填写]\n学员经验水平：[填写]\n\n请设计2-3个案例研讨题，每个包含：\n1. 案例标题\n2. 案例情境描述（300-500字，贴近真实工作场景）\n3. 核心讨论问题（3-4个，由浅入深）\n4. 小组讨论引导问题（教师用）\n5. 可能的讨论方向和教师点评要点\n6. 建议的汇报形式\n\n案例要有争议性和多解性，避免唯一正确答案。' },
+      { name:'AI模拟对话练习', icon:'🤖', desc:'生成角色扮演对话脚本，用于技能训练', scene:'沟通技能训练',
+        steps:['输入训练场景和目标技能','设定角色和对话轮次','AI生成对话脚本和评分标准','学员练习并获得反馈'],
+        prompt:'你是一位角色扮演脚本设计专家。\n\n请设计一段模拟对话练习：\n训练场景：[如绩效面谈、客户投诉处理、销售谈判]\n目标技能：[列出]\n角色设定：[A角色和B角色的身份]\n对话轮次：[如5-8轮]\n\n请输出：\n1. 场景背景设定（100字）\n2. 角色A的立场和内心想法\n3. 角色B的立场和内心想法\n4. 完整对话脚本示例\n5. 评分标准（4维度，每维度1-5分）\n6. 常见错误和纠正建议\n7. 进阶挑战版本\n\n对话要真实自然，包含情绪冲突和转折点。' },
+      { name:'实时互动问题生成器', icon:'❓', desc:'课中AI实时生成检验理解的互动问题', scene:'课堂即时互动',
+        steps:['输入刚讲完的课程内容','AI实时生成互动问题','选择适合的问题类型','在课堂上使用'],
+        prompt:'你是一位课堂提问专家。请根据以下刚讲授的内容，生成即时互动问题：\n\n刚讲授的内容：[粘贴]\n\n请生成以下类型的问题：\n1. 快速理解检验题（3个选择题，用于即时投票）\n2. 深度思考题（2个开放题，用于小组讨论）\n3. 应用实践题（1个情景题，用于学以致用）\n\n每题标注：\n- 对应布鲁姆层次\n- 建议的互动方式（举手/投票APP/讨论）\n- 预期答案要点\n\n问题难度由浅入深，确保大部分学员能参与。' },
+      { name:'情景模拟设计师', icon:'🎭', desc:'设计沉浸式情景模拟练习，含评分标准', scene:'沉浸式学习',
+        steps:['输入训练目标和场景','设定难度和参与人数','AI生成完整情景模拟方案','包含评分标准和复盘指南'],
+        prompt:'你是一位情景模拟教学设计专家。\n\n请设计一个沉浸式情景模拟练习：\n训练目标：[填写]\n模拟场景：[填写]\n参与人数：[填写]\n时长：[填写]\n\n方案需包含：\n1. 场景设定（背景、时间、地点）\n2. 角色分配（每个角色的任务卡和背景信息）\n3. 模拟流程（分阶段的引导词和时间节点）\n4. 关键决策点和分支路径\n5. 评分标准表（5维度，量化评分）\n6. 教师观察要点\n7. 复盘引导问题和总结框架\n\n要求：高度仿真，有冲突和压力元素，能真实反映学员能力。' }
+    ]
+  },
+  evaluation: {
+    name: '📊 培训评估 Evaluation',
+    desc: '科学评估培训效果，持续优化培训质量',
+    tools: [
+      { name:'柯氏四级评估方案设计', icon:'📈', desc:'AI根据课程目标生成完整四级评估方案', scene:'培训效果评估',
+        steps:['输入课程信息和目标','选择评估级别（反应/学习/行为/结果）','AI生成完整评估方案','按计划执行评估'],
+        prompt:'你是一位培训评估专家，精通柯氏四级评估模型。\n\n课程信息：\n课程名称：[填写]\n课程目标：[列出]\n目标学员：[描述]\n\n请设计柯氏四级评估方案：\nLevel 1 反应评估：满意度问卷（含NPS）、课堂观察表\nLevel 2 学习评估：前后测对比、技能演示评分\nLevel 3 行为评估：30/60/90天行为观察计划、上级反馈表\nLevel 4 结果评估：业务指标关联分析、ROI计算框架\n\n每个级别需包含：评估工具、评估时机、数据收集方法、分析方式、报告模板框架。' },
+      { name:'反应评估问卷生成器', icon:'📋', desc:'AI生成专业满意度调研问卷，含NPS设计', scene:'课后满意度调研',
+        steps:['输入课程基本信息','设定问卷维度和题数','AI生成完整问卷','用于课后即时收集'],
+        prompt:'你是一位培训评估问卷设计专家。\n\n请为以下课程设计课后满意度评估问卷：\n课程名称：[填写]\n课程时长：[填写]\n学员人数：[填写]\n\n问卷需包含：\n1. 基本信息（2题）\n2. 课程内容评价（5题，5点量表）\n3. 讲师表现评价（4题，5点量表）\n4. 课程组织评价（3题，5点量表）\n5. NPS净推荐值（0-10分）\n6. 最满意的3点（开放题）\n7. 最需改进的3点（开放题）\n8. 未来培训需求（开放题）\n\n每题标注题型和计分方式。提供数据分析维度建议。' },
+      { name:'知识检测题库', icon:'✅', desc:'AI生成前测后测题库，自动计算知识增益', scene:'学习效果验证',
+        steps:['输入课程知识点','生成前测和后测题库','学员完成测试后','AI对比计算知识增益'],
+        prompt:'你是一位学习评估专家。\n\n请为以下课程生成前测和后测题库：\n课程名称：[填写]\n知识点：[列出]\n每知识点题数：[填写]\n\n要求：\n1. 前测和后测使用相同知识点但不同题目\n2. 题型包含单选、多选、判断\n3. 每题标注对应知识点\n4. 提供答案和解析\n5. 设计知识增益计算公式\n6. 提供评估报告模板\n\n前测难度略低于后测，确保能检测出学习增益。' },
+      { name:'行为改变追踪方案', icon:'🔄', desc:'AI设计培训后30/60/90天行为跟踪计划', scene:'训后行为转化',
+        steps:['输入课程名称和目标行为','设定跟踪周期和方式','AI生成行为跟踪计划','按计划定期收集数据'],
+        prompt:'你是一位行为改变追踪专家。\n\n请设计培训后行为改变跟踪方案：\n课程名称：[填写]\n目标行为改变：[描述期望的行为变化]\n跟踪周期：30天/60天/90天\n评估方式：[自评/上级评/同事评/客户评]\n\n方案需包含：\n1. 每个跟踪节点的行为观察清单\n2. 不同评估角色的评分表\n3. 数据收集工具和方法\n4. 行为改变的量化指标\n5. 影响行为转化的障碍因素分析\n6. 干预措施建议\n7. 跟踪报告模板\n\n注意：行为指标要具体、可观察、可量化。' },
+      { name:'培训ROI计算器', icon:'💰', desc:'输入成本与收益数据，AI计算并生成ROI报告', scene:'培训价值证明',
+        steps:['输入培训成本数据','输入可量化的收益数据','AI计算ROI并生成报告','用于向管理层汇报'],
+        prompt:'你是一位培训ROI分析专家。\n\n请基于以下数据计算培训ROI：\n培训成本：\n- 开发成本：[填写]\n- 讲师费用：[填写]\n- 场地和物料：[填写]\n- 学员时间成本：[填写]\n- 其他：[填写]\n\n培训收益（可量化部分）：\n- 效率提升价值：[填写]\n- 错误率降低价值：[填写]\n- 业绩增长贡献：[填写]\n- 其他收益：[填写]\n\n请计算：\n1. 总成本\n2. 总收益\n3. 净收益\n4. ROI = (净收益/总成本) × 100%\n5. 投资回收期\n6. 生成ROI报告（含图表建议和执行摘要）' },
+      { name:'评估数据可视化报告', icon:'📉', desc:'AI将评估数据转化为直观图表报告', scene:'评估结果展示',
+        steps:['输入评估原始数据','选择可视化类型','AI生成图表和报告','导出用于汇报'],
+        prompt:'你是一位数据可视化专家。\n\n请将以下培训评估数据转化为可视化报告：\n\n评估数据：[粘贴数据]\n\n请设计以下可视化方案：\n1. 满意度分布（饼图/柱状图建议）\n2. 前后测成绩对比（折线图/柱状图）\n3. 各维度雷达图\n4. NPS趋势图（如有多期数据）\n5. 关键指标看板\n\n对每个图表提供：\n- 图表类型建议\n- 数据标签和标题\n- 关键发现标注\n- 配色方案\n- 使用 Mermaid 或 ASCII 方式呈现图表原型\n\n附带200字以内的执行摘要。' }
+    ]
+  },
+  promotion: {
+    name: '📢 课程宣发 Promotion',
+    desc: '精准推广课程，扩大培训影响力和参与度',
+    tools: [
+      { name:'课程简介文案生成器', icon:'✍️', desc:'AI生成吸引人的课程介绍文案，适配不同渠道', scene:'课程推广',
+        steps:['输入课程基本信息','选择推广渠道和风格','AI生成多版本文案','选择最合适的版本'],
+        prompt:'你是一位培训课程文案策划专家。\n\n请为以下课程生成推广文案：\n课程名称：[填写]\n课程亮点：[列出3-5个核心卖点]\n目标学员：[描述]\n课程时长和形式：[填写]\n\n请生成3个版本的文案：\n1. 正式版本（适合官网、企业内刊，200-300字）\n2. 营销版本（适合海报、广告语，50-100字）\n3. 社交版本（适合微信朋友圈，100-150字）\n\n每个版本都要包含：吸引眼球的标题、课程亮点、学员收益、行动召唤（CTA）。' },
+      { name:'朋友圈公众号推文', icon:'📱', desc:'AI生成培训相关社交媒体内容', scene:'社交媒体推广',
+        steps:['输入课程主题和目标','选择平台风格和调性','AI生成推文内容','配图建议一并输出'],
+        prompt:'你是一位社交媒体内容运营专家。\n\n请为以下培训生成朋友圈/公众号推文：\n培训主题：[填写]\n核心卖点：[列出]\n目标读者：[描述]\n发布平台：[朋友圈/公众号]\n\n内容要求：\n1. 标题/开头：3秒内抓住注意力\n2. 痛点共鸣：让读者觉得"这说的就是我"\n3. 解决方案：课程如何解决痛点\n4. 社会证明：往期学员反馈或数据\n5. 行动召唤：扫码/报名链接\n6. 配图建议（3-5张图的描述）\n\n风格：亲切自然、有温度、不硬广。' },
+      { name:'海报文案设计', icon:'🎨', desc:'AI生成培训海报的文字内容和设计建议', scene:'视觉物料制作',
+        steps:['输入课程核心信息','选择海报风格和主题','AI生成文案和设计建议','用于海报设计师参考'],
+        prompt:'你是一位海报文案和设计顾问。\n\n请为以下培训课程设计海报文案：\n课程名称：[填写]\n核心卖点：[列出]\n讲师：[填写]\n时间地点：[填写]\n\n请提供：\n1. 主标题（8字以内，有冲击力）\n2. 副标题（补充说明，15字以内）\n3. 3个核心卖点（每个10字以内）\n4. 行动召唤文案\n5. 设计建议：配色方案、视觉元素、排版布局\n6. 不同尺寸适配建议（手机海报/A4/易拉宝）\n\n文案要精炼有力，视觉建议要具体可操作。' },
+      { name:'课程宣传视频脚本', icon:'🎥', desc:'AI生成30秒/1分钟宣传短视频脚本', scene:'视频宣传',
+        steps:['输入课程信息和亮点','设定视频时长和风格','AI生成视频分镜脚本','用于视频拍摄制作'],
+        prompt:'你是一位短视频脚本编剧。\n\n请为以下课程制作宣传视频脚本：\n课程名称：[填写]\n核心亮点：[列出]\n视频时长：[30秒/60秒]\n风格：[专业/活力/温情]\n\n分镜脚本格式：\n| 时间 | 画面 | 旁白/字幕 | 音效 | 转场 |\n\n结构要求：\n- 0-3秒：Hook（痛点共鸣）\n- 3-15秒：解决方案引入\n- 15-40秒：课程亮点展示\n- 40-55秒：社会证明\n- 55-60秒：行动召唤\n\n旁白要有感染力，画面描述要具体可执行。' },
+      { name:'学员招募通知模板', icon:'📧', desc:'AI生成正式的学员招募通知和邮件', scene:'正式通知发送',
+        steps:['输入培训课程信息','选择通知语气和格式','AI生成完整招募通知','适配邮件/企微/钉钉'],
+        prompt:'你是一位企业内部沟通专家。\n\n请为以下培训课程生成学员招募通知：\n课程名称：[填写]\n课程简介：[简要描述]\n培训时间：[填写]\n培训地点：[填写]\n目标学员：[填写]\n报名方式：[填写]\n截止日期：[填写]\n\n请生成2个版本：\n1. 正式邮件版本（适合OA系统/邮件通知）\n2. 即时通讯版本（适合企微/钉钉/飞书，更简洁）\n\n每版本包含：标题、正文、报名信息、注意事项、联系方式。语气正式但不生硬。' },
+      { name:'培训成果报告模板', icon:'📑', desc:'AI生成培训结束后的成果汇报PPT大纲', scene:'训后成果汇报',
+        steps:['输入培训课程和评估数据','选择报告风格和受众','AI生成成果报告PPT大纲','填充数据后用于汇报'],
+        prompt:'你是一位培训成果汇报专家。\n\n请为以下培训生成成果报告PPT大纲：\n课程名称：[填写]\n培训时间：[填写]\n参训人数：[填写]\n评估数据：[粘贴关键数据]\n汇报对象：[管理层/HR/业务部门]\n\nPPT大纲（建议10-12页）：\n1. 封面\n2. 培训概述\n3. 培训目标回顾\n4. 实施情况（时间线）\n5. 学员反馈（满意度数据）\n6. 学习效果（前后测对比）\n7. 行为转化（30/60/90天）\n8. 业务影响（ROI）\n9. 学员优秀案例\n10. 改进建议\n11. 下一步计划\n12. 致谢\n\n每页标注内容要点和图表建议。' }
+    ]
+  },
+  innovation: {
+    name: '✨ AI增强创新场景',
+    desc: '前沿AI能力，重新定义培训的未来',
+    tools: [
+      { name:'培训师AI分身', icon:'🤖', desc:'将你的培训风格和知识库训练为个人AI助手', scene:'个人品牌延伸',
+        steps:['整理你的培训资料和风格偏好','上传到AI训练平台','AI学习并生成你的数字分身','用于自动回答学员问题'],
+        prompt:'你是一位AI数字分身设计专家。\n\n请帮我设计培训师AI分身的训练方案：\n我的培训领域：[填写]\n培训风格：[如幽默互动型/专业严谨型/温和引导型]\n核心知识库：[列出主要知识领域]\n\n请设计：\n1. 需要准备的训练材料清单\n2. 训练数据的格式要求\n3. AI分身的回答风格设定\n4. 知识库更新机制\n5. 质量控制和人工审核流程\n6. 使用场景和边界设定\n\n让AI分身尽可能真实地模仿我的专业水平和沟通风格。' },
+      { name:'学习路径智能规划', icon:'🗺️', desc:'AI根据岗位和能力差距生成个性化学习路径', scene:'个性化学习',
+        steps:['输入岗位要求和当前能力','AI分析能力差距','生成个性化学习路径','持续跟踪和调整'],
+        prompt:'你是一位学习路径设计专家。\n\n请为以下情况设计个性化学习路径：\n目标岗位：[填写]\n岗位核心能力要求：[列出]\n当前能力水平：[自评或评估结果]\n学习时间：[每周可用小时数]\n学习偏好：[视频/阅读/实践/混合]\n\n请生成：\n1. 能力差距分析矩阵\n2. 学习路径图（3/6/12个月）\n3. 每月学习重点和推荐资源\n4. 里程碑和检验点\n5. 弹性调整建议\n\n路径要具体到每周的学习任务，并标注优先级。' },
+      { name:'课程效果预测器', icon:'🔮', desc:'基于历史数据，AI预测课程效果和参与度', scene:'培训决策支持',
+        steps:['输入课程设计和历史数据','AI进行效果预测分析','获取优化建议','调整课程方案'],
+        prompt:'你是一位培训预测分析专家。\n\n请基于以下信息预测课程效果：\n课程名称：[填写]\n课程设计方案：[简述]\n历史类似课程数据：[如有]\n学员特征：[描述]\n外部环境因素：[填写]\n\n请预测：\n1. 预期参与度（出勤率、互动率）\n2. 预期满意度（1-5分）\n3. 预期知识留存率（30天后）\n4. 预期行为转化率（90天后）\n5. 风险因素识别\n6. 优化建议（按影响力排序）\n\n给出预测的信心区间和依据。' },
+      { name:'多语言培训适配', icon:'🌐', desc:'AI将培训材料自动翻译并文化适配', scene:'全球化培训',
+        steps:['输入培训材料原文','选择目标语言和文化背景','AI翻译并文化适配','审核确认最终版本'],
+        prompt:'你是一位跨文化培训本地化专家。\n\n请将以下培训材料进行多语言适配：\n原文内容：[粘贴]\n目标语言：[填写]\n目标文化背景：[如东南亚/欧洲/北美]\n\n请完成：\n1. 准确翻译\n2. 文化适配调整（替换不适用的案例、比喻、幽默）\n3. 本地化案例替换建议\n4. 注意事项（禁忌、敏感话题）\n5. 视觉元素调整建议\n\n确保内容在目标文化中同样有效、恰当。' },
+      { name:'无障碍内容转化', icon:'♿', desc:'AI将培训内容转为音频大字版等无障碍格式', scene:'包容性培训',
+        steps:['输入培训内容','选择无障碍格式类型','AI自动转换','生成多种无障碍版本'],
+        prompt:'你是一位无障碍学习设计专家。\n\n请将以下培训内容转换为无障碍格式：\n原始内容：[粘贴]\n目标无障碍格式：[大字版/音频版/简易语言版/手语脚本]\n目标群体：[如视障/听障/认知障碍学员]\n\n请输出：\n1. 转换后的内容\n2. 格式调整说明\n3. 辅助技术兼容性建议\n4. 多模态呈现方案\n\n确保所有学员都能平等获取培训内容。' },
+      { name:'培训趋势雷达', icon:'📡', desc:'AI实时追踪行业培训趋势，推荐热点主题', scene:'战略培训规划',
+        steps:['输入所在行业和关注领域','AI分析最新培训趋势','获取热点主题推荐','用于年度培训规划'],
+        prompt:'你是一位培训行业趋势分析专家。\n\n请分析以下领域的培训趋势：\n行业：[填写]\n关注领域：[填写]\n时间范围：[近6个月/近1年]\n\n请输出：\n1. 行业培训趋势Top 10\n2. 热门培训主题（附热度指数）\n3. 新兴技术对培训的影响\n4. 竞争对手培训动态分析\n5. 推荐的培训投资方向\n6. 培训技术工具推荐\n7. 年度培训规划建议\n\n数据来源要注明，分析要有前瞻性和可操作性。' }
+    ]
+  }
+};
+
+// Render modules
+function renderModules() {
+  const container = document.getElementById('modulesContainer');
+  let html = '';
+  const moduleKeys = ['analysis','design','development','implementation','evaluation','promotion'];
+  
+  moduleKeys.forEach((key, idx) => {
+    const mod = toolsData[key];
+    html += `<section class="section module-section" data-module="${key}">
+      <div class="section-header">
+        <h2>${mod.name}</h2>
+        <p>${mod.desc}</p>
+      </div>
+      <div class="module-grid">`;
+    mod.tools.forEach((tool, i) => {
+      html += `<div class="tool-card" data-name="${tool.name}" data-key="${key}">
+        <div class="card-icon">${tool.icon}</div>
+        <h3>${tool.name}</h3>
+        <p class="card-desc">${tool.desc}</p>
+        <span class="card-scene">${tool.scene}</span>
+        <button class="btn-use" onclick='openModal(${JSON.stringify(tool).replace(/'/g,"&#39;")})'>立即使用 →</button>
+      </div>`;
+    });
+    html += `</div></section>`;
+  });
+  container.innerHTML = html;
+}
+
+// Render innovation
+function renderInnovation() {
+  const grid = document.getElementById('innovationGrid');
+  let html = '';
+  toolsData.innovation.tools.forEach(tool => {
+    html += `<div class="innovation-card" data-name="${tool.name}">
+      <div class="card-icon">${tool.icon}</div>
+      <h3>${tool.name}</h3>
+      <p class="card-desc">${tool.desc}</p>
+      <button class="btn-use" onclick='openModal(${JSON.stringify(tool).replace(/'/g,"&#39;")})'>立即使用 →</button>
+    </div>`;
+  });
+  grid.innerHTML = html;
+}
+
+// Modal
+function openModal(tool) {
+  document.getElementById('modalTitle').textContent = tool.icon + ' ' + tool.name;
+  document.getElementById('modalDesc').textContent = tool.desc;
+  let stepsHtml = '';
+  tool.steps.forEach((s, i) => {
+    stepsHtml += `<div class="step"><span class="step-num">${i+1}</span><span>${s}</span></div>`;
+  });
+  document.getElementById('stepsList').innerHTML = stepsHtml;
+  document.getElementById('modalPrompt').value = tool.prompt;
+  document.getElementById('modalOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function copyPrompt() {
+  const text = document.getElementById('modalPrompt').value;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('✅ Prompt 已复制到剪贴板');
+  }).catch(() => {
+    // Fallback
+    const ta = document.getElementById('modalPrompt');
+    ta.select();
+    document.execCommand('copy');
+    showToast('✅ Prompt 已复制到剪贴板');
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// Filter
+function filterModule(key, btn) {
+  document.querySelectorAll('.nav-filter button').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  
+  document.querySelectorAll('.module-section').forEach(s => {
+    s.style.display = (key === 'all' || s.dataset.module === key) ? '' : 'none';
+  });
+  document.getElementById('innovationSection').style.display = (key === 'all' || key === 'innovation') ? '' : 'none';
+}
+
+function filterTools() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  document.querySelectorAll('.tool-card, .innovation-card').forEach(card => {
+    const name = (card.dataset.name || '').toLowerCase();
+    const text = card.textContent.toLowerCase();
+    card.style.display = (!q || name.includes(q) || text.includes(q)) ? '' : 'none';
+  });
+  if (q) {
+    document.querySelectorAll('.module-section').forEach(s => s.style.display = '');
+    document.getElementById('innovationSection').style.display = '';
+    document.querySelectorAll('.nav-filter button').forEach(b => b.classList.remove('active'));
+    document.querySelector('.nav-filter button').classList.add('active');
+  }
+}
+
+// Navbar scroll
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 10);
+});
+
+// Keyboard close modal
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+// Init
+renderModules();
+renderInnovation();
+</script>
+</body>
+</html>
