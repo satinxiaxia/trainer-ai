@@ -86,7 +86,7 @@ tr:hover td{background:#253348}
     <div class="kpi-grid" id="kpiGrid">
       <div class="kpi-card"><div class="kpi-label">工具使用总次数</div><div class="kpi-value" id="k-total">-</div><div class="kpi-sub">累计</div></div>
       <div class="kpi-card"><div class="kpi-label">今日使用次数</div><div class="kpi-value" id="k-today">-</div><div class="kpi-sub">今天</div></div>
-      <div class="kpi-card"><div class="kpi-label">已使用工具数</div><div class="kpi-value" id="k-tools">-</div><div class="kpi-sub">种工具被使用过</div></div>
+      <div class="kpi-card"><div class="kpi-label">注册用户数</div><div class="kpi-value" id="k-users">-</div><div class="kpi-sub">已登录使用的账号</div></div>
       <div class="kpi-card"><div class="kpi-label">最活跃模块</div><div class="kpi-value" id="k-module" style="font-size:1.1rem;padding-top:6px">-</div><div class="kpi-sub">使用最多</div></div>
     </div>
 
@@ -121,8 +121,8 @@ tr:hover td{background:#253348}
       <div class="card-title">📋 全部使用记录（最新100条）</div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>时间</th><th>工具名称</th><th>模块</th><th>设备</th></tr></thead>
-          <tbody id="recordsTable"><tr><td colspan="4" class="loading">加载中...</td></tr></tbody>
+          <thead><tr><th>时间</th><th>用户账号</th><th>工具名称</th><th>模块</th><th>设备</th></tr></thead>
+          <tbody id="recordsTable"><tr><td colspan="5" class="loading">加载中...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -234,7 +234,6 @@ function render(data) {
   if (sortedTools.length === 0) {
     tbody.innerHTML = '<tr><td colspan="5" class="empty">暂无数据</td></tr>';
   } else {
-    // 找每个工具最近使用时间和模块
     const toolMeta = {};
     data.forEach(x => {
       if (!toolMeta[x.tool_name]) toolMeta[x.tool_name] = { module: x.module_id, last: x.created_at };
@@ -252,20 +251,29 @@ function render(data) {
     }).join('');
   }
 
-  // 使用记录表格
+  // 使用记录表格（含用户账号）
   const rtbody = document.getElementById('recordsTable');
   if (data.length === 0) {
-    rtbody.innerHTML = '<tr><td colspan="4" class="empty">暂无记录</td></tr>';
+    rtbody.innerHTML = '<tr><td colspan="5" class="empty">暂无记录</td></tr>';
   } else {
-    rtbody.innerHTML = data.slice(0,100).map(x =>
-      `<tr>
+    rtbody.innerHTML = data.slice(0,100).map(x => {
+      const userShow = x.user_email
+        ? `<div style="font-size:.82rem;font-weight:600">${x.user_name||x.user_email}</div><div style="font-size:.7rem;color:#64748b">${x.user_email}</div>`
+        : `<span style="color:#64748b;font-size:.78rem">未登录访客</span>`;
+      return `<tr>
         <td style="white-space:nowrap;color:#94a3b8;font-size:.78rem">${fmtTime(x.created_at)}</td>
+        <td>${userShow}</td>
         <td><strong>${x.tool_name}</strong></td>
         <td><span class="badge badge-blue">${MODULE_NAME[x.module_id]||x.module_id||'-'}</span></td>
         <td style="font-size:.8rem">${devIcon(x.user_agent)}</td>
-      </tr>`
-    ).join('');
+      </tr>`;
+    }).join('');
   }
+
+  // 注册用户KPI（统计唯一邮箱数）
+  const uniqueUsers = new Set(data.filter(x=>x.user_email).map(x=>x.user_email)).size;
+  const kpiUsersEl = document.getElementById('k-users');
+  if (kpiUsersEl) kpiUsersEl.textContent = uniqueUsers;
 
   // 模块柱状图
   const maxVal = Math.max(...Object.values(moduleCounts), 1);
