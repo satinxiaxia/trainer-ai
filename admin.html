@@ -191,10 +191,11 @@ function render(data) {
   data.forEach(x => { moduleCounts[x.module_id] = (moduleCounts[x.module_id]||0)+1; });
   const topModule = Object.entries(moduleCounts).sort((a,b)=>b[1]-a[1])[0];
 
-  document.getElementById('k-total').textContent = data.length;
-  document.getElementById('k-today').textContent = todayData.length;
-  document.getElementById('k-tools').textContent = toolSet.size;
-  document.getElementById('k-module').textContent = topModule ? (MODULE_NAME[topModule[0]]||topModule[0]) : '-';
+  const safeSet = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  safeSet('k-total', data.length);
+  safeSet('k-today', todayData.length);
+  safeSet('k-tools', toolSet.size);
+  safeSet('k-module', topModule ? (MODULE_NAME[topModule[0]]||topModule[0]) : '-');
 
   // 热门工具
   const toolCounts = {};
@@ -274,6 +275,9 @@ function render(data) {
   const uniqueUsers = new Set(data.filter(x=>x.user_email).map(x=>x.user_email)).size;
   const kpiUsersEl = document.getElementById('k-users');
   if (kpiUsersEl) kpiUsersEl.textContent = uniqueUsers;
+  // 已使用工具数
+  const kpiToolsEl = document.getElementById('k-tools');
+  if (kpiToolsEl) kpiToolsEl.textContent = toolSet.size;
 
   // 模块柱状图
   const maxVal = Math.max(...Object.values(moduleCounts), 1);
