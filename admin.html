@@ -165,7 +165,8 @@ function devIcon(ua='') {
 }
 
 async function loadData() {
-  document.getElementById('lastUpdate').textContent = '加载中...';
+  const lastEl = document.getElementById('lastUpdate');
+  if (lastEl) lastEl.textContent = '加载中...';
   try {
     const res = await fetch(
       `${SUPABASE_URL}/rest/v1/tool_events?select=tool_name,module_id,created_at,user_agent,user_id,user_email,user_name&order=created_at.desc&limit=1000`,
@@ -173,11 +174,17 @@ async function loadData() {
     );
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
+    if (!Array.isArray(data)) throw new Error('返回数据格式错误');
     render(data);
-    document.getElementById('lastUpdate').innerHTML = `上次更新 <span>${new Date().toLocaleTimeString('zh-CN')}</span>`;
+    if (lastEl) lastEl.innerHTML = `上次更新 <span>${new Date().toLocaleTimeString('zh-CN')}</span>`;
   } catch(e) {
-    document.getElementById('lastUpdate').textContent = '加载失败: ' + e.message;
-    console.error(e);
+    if (lastEl) lastEl.textContent = '加载失败: ' + e.message;
+    // 显示错误状态
+    ['hotList','recentList'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = `<div class="empty">加载失败，请点刷新重试</div>`;
+    });
+    console.error('loadData error:', e);
   }
 }
 
@@ -267,10 +274,13 @@ function switchTab(id, btn) {
   btn.classList.add('active');
 }
 
-// 加载数据
-loadData();
-// 每60秒自动刷新
-setInterval(loadData, 60000);
+// 加载数据 - 多重保障
+document.addEventListener('DOMContentLoaded', function() {
+  loadData();
+  setInterval(loadData, 60000);
+});
+// 兜底：DOMContentLoaded可能已经触发
+if (document.readyState !== 'loading') loadData();
 </script>
 </body>
 </html>
